@@ -21,7 +21,7 @@ impl Status {
             last_fetch: Instant::now(),
             validity,
             client: Client::new(),
-            regex: Regex::new(r"Occupancy: ([0-9][0-9])%").unwrap(),
+            regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
         };
 
         inner.update_status().await;
