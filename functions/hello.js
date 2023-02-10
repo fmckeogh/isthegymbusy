@@ -1,3 +1,5 @@
 export function onRequest(context) {
-  return new Response("Hello, world!");
+  fetch("https://sport.wp.st-andrews.ac.uk/").then((response) => {
+    return new Response(response.responseText);
+  });
 }
