@@ -1,5 +1,6 @@
 use {
-    axum::{http::StatusCode, response::IntoResponse},
+    crate::status::Status,
+    axum::{extract::State, http::StatusCode, response::IntoResponse},
     maud::{html, Markup, DOCTYPE},
 };
 
@@ -16,14 +17,23 @@ pub async fn health() -> impl IntoResponse {
 }
 
 /// Index page handler
-pub async fn index() -> impl IntoResponse {
+pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
+    let capacity = status.get().await;
+
     html! {
         (header())
 
         body {
             ."p-5" {
-                h1 ."display-1 text-center text-danger" { "Yes" }
-                h3 ."text-center" { "Current occupancy: 43%" }
+                h2 ."text-center" { "Is the gym busy?" }
+
+                @if capacity > 60 {
+                    h1 ."display-1 text-center text-danger" { "Yes" }
+                } @else {
+                    h1 ."display-1 text-center text-success" { "No" }
+                }
+
+                h3 ."text-center" { "Current occupancy: " (capacity) "%" }
             }
         }
     }

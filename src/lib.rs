@@ -2,6 +2,7 @@ use {
     crate::{
         log::create_trace_layer,
         routes::{health, index},
+        status::Status,
     },
     axum::{routing::get, Router},
     color_eyre::eyre::Result,
@@ -14,6 +15,7 @@ pub mod config;
 pub mod error;
 pub mod log;
 pub mod routes;
+pub mod status;
 
 pub use crate::config::Config;
 
@@ -23,10 +25,13 @@ pub async fn start(config: &Config) -> Result<Handle> {
     #[cfg(not(test))]
     crate::log::tracing_init()?;
 
+    let state = Status::new().await;
+
     // create router with all routes and tracing layer
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
+        .with_state(state)
         .layer(create_trace_layer());
 
     // bind axum server to socket address and use router to create a service factory
