@@ -1,5 +1,5 @@
-export function onRequest(context) {
-  fetch("https://sport.wp.st-andrews.ac.uk/").then((response) => {
+export async function onRequest(context) {
+  await fetch("https://sport.wp.st-andrews.ac.uk/").then((response) => {
     return new Response(response.responseText);
   });
 }
