@@ -14,4 +14,16 @@
       <h3 class="text-center">Current occupancy: 43%</h3>
     </div>
   </body>
+  <script>
+    function reqListener() {
+      console.log(this.responseText);
+    }
+
+    window.onload = (event) => {
+      const req = new XMLHttpRequest();
+      req.addEventListener("load", reqListener);
+      req.open("GET", "https://sport.wp.st-andrews.ac.uk");
+      req.send();
+    };
+  </script>
 </html>
