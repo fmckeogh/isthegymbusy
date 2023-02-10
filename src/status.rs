@@ -9,7 +9,7 @@ use {
     tracing::trace,
 };
 
-const TIMEOUT: Duration = Duration::from_secs(30);
+const TIMEOUT: Duration = Duration::from_secs(60);
 
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
 
