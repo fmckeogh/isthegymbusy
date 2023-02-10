@@ -14,7 +14,7 @@ COPY Cargo.toml .
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # build app
-COPY . .
+COPY src src
 RUN touch src/main.rs
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
