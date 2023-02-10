@@ -12,6 +12,9 @@ use {
 pub struct Config {
     /// Socket to bind HTTP server to
     pub address: SocketAddr,
+
+    /// Number of seconds status will be cached
+    pub status_validity: u64,
 }
 
 impl Config {

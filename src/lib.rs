@@ -6,7 +6,7 @@ use {
     },
     axum::{routing::get, Router},
     color_eyre::eyre::Result,
-    std::net::SocketAddr,
+    std::{net::SocketAddr, time::Duration},
     tokio::task::JoinHandle,
     tracing::info,
 };
@@ -25,7 +25,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     #[cfg(not(test))]
     crate::log::tracing_init()?;
 
-    let state = Status::new().await;
+    let state = Status::new(Duration::from_secs(config.status_validity)).await;
 
     // create router with all routes and tracing layer
     let router = Router::new()

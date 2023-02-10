@@ -9,18 +9,17 @@ use {
     tracing::trace,
 };
 
-const TIMEOUT: Duration = Duration::from_secs(60);
-
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
 
 #[derive(Clone)]
 pub struct Status(Arc<Mutex<Inner>>);
 
 impl Status {
-    pub async fn new() -> Self {
+    pub async fn new(validity: Duration) -> Self {
         let mut inner = Inner {
             capacity: 0,
             last_fetch: Instant::now(),
+            validity,
             client: Client::new(),
             regex: Regex::new(r"Occupancy: ([0-9][0-9])%").unwrap(),
         };
@@ -33,7 +32,7 @@ impl Status {
     pub async fn get(&mut self) -> u8 {
         let mut inner = self.0.lock().await;
 
-        if inner.last_fetch.elapsed() > TIMEOUT {
+        if inner.last_fetch.elapsed() > inner.validity {
             inner.update_status().await;
         };
 
@@ -44,6 +43,7 @@ impl Status {
 pub struct Inner {
     capacity: u8,
     last_fetch: Instant,
+    validity: Duration,
     client: Client,
     regex: Regex,
 }

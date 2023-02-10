@@ -7,6 +7,7 @@ processes = []
 
 [env]
   ADDRESS = "0.0.0.0:8080"
+  STATUS_VALIDITY = "60"
   RUST_LOG = "info,sqlx=warn,tower_http::trace::on_request=warn"
 
 [experimental]
