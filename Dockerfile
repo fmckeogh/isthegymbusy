@@ -1,5 +1,5 @@
 FROM rust AS builder
-WORKDIR /tmp/build
+WORKDIR /tmp/isthegymbusy
 
 # prepare toolchain
 RUN rustup target add x86_64-unknown-linux-musl
@@ -21,5 +21,5 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 FROM scratch
 ENV RUST_LOG=
 ENV ADDRESS=
-COPY --from=builder /tmp/build/target/x86_64-unknown-linux-musl/release/isthegymbusy .
+COPY --from=builder /tmp/isthegymbusy/target/x86_64-unknown-linux-musl/release/isthegymbusy .
 ENTRYPOINT ["./isthegymbusy"]

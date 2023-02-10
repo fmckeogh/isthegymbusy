@@ -1,4 +1,4 @@
-# fly.toml file generated for contractor on 2022-09-09T14:09:47+01:00
+# fly.toml file generated for isthegymbusy on 2023-02-10T16:56:41Z
 
 app = "isthegymbusy"
 kill_signal = "SIGINT"
@@ -33,12 +33,6 @@ processes = []
     timeout = "2s"
     tls_skip_verify = false
 
-  [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "30s"
-    restart_limit = 0
-    timeout = "2s"
-
   [[services.ports]]
     force_https = true
     handlers = ["http"]
@@ -47,3 +41,9 @@ processes = []
   [[services.ports]]
     handlers = ["tls", "http"]
     port = 443
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "30s"
+    restart_limit = 0
+    timeout = "2s"
