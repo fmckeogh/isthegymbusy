@@ -1,5 +1,5 @@
 use {
-    crate::{config, status::Status},
+    crate::{config, status::StatusFetcher},
     axum::{
         extract::State,
         http::{
@@ -26,7 +26,7 @@ pub async fn health() -> impl IntoResponse {
 }
 
 /// Index page handler
-pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
+pub async fn index(State(mut status): State<StatusFetcher>) -> impl IntoResponse {
     let capacity = status.get().await;
 
     let html = html! {
@@ -58,7 +58,7 @@ pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
         CACHE_CONTROL,
         HeaderValue::from_str(&format!(
             "public, max-age={}, immutable",
-            config::get().status_validity / 4
+            config::get().fetch_interval / 4
         ))
         .unwrap(),
     );

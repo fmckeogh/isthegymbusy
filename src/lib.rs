@@ -2,7 +2,7 @@ use {
     crate::{
         log::create_trace_layer,
         routes::{health, index},
-        status::Status,
+        status::StatusFetcher,
     },
     axum::{routing::get, Router},
     color_eyre::eyre::Result,
@@ -29,7 +29,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
 
     config::init(config.clone()).await;
 
-    let state = Status::new().await;
+    let status = StatusFetcher::new().await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -37,7 +37,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
-        .with_state(state)
+        .with_state(status)
         .layer(compression)
         .layer(create_trace_layer());
 

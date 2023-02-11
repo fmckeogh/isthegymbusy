@@ -9,9 +9,10 @@ use {
 const HEADER_SIZE: usize = size_of::<Header>();
 const RAW_ENTRY_SIZE: usize = size_of::<RawEntry>();
 
+/// 7 days worth of entries at 1 per minute
 const NUM_ENTRIES: u64 = 7 * 24 * 60;
 
-/// Total file size is the size of the header and 7 days worth of entries at one entry per minute.
+/// Total file size is the size of the header
 const FILE_SIZE: u64 = HEADER_SIZE as u64 + NUM_ENTRIES * RAW_ENTRY_SIZE as u64;
 
 #[repr(C)]

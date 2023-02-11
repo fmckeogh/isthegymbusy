@@ -24,9 +24,10 @@ pub struct Config {
     /// Socket to bind HTTP server to
     pub address: SocketAddr,
 
-    /// Number of seconds status will be cached
-    pub status_validity: u64,
+    /// Number of seconds between fetching status
+    pub fetch_interval: u64,
 
+    /// Path to history file
     pub history_path: String,
 }
 

@@ -7,15 +7,16 @@ use {
         sync::Arc,
         time::{Duration, Instant, SystemTime, UNIX_EPOCH},
     },
+    tokio::time::sleep,
     tracing::info,
 };
 
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
 
 #[derive(Clone)]
-pub struct Status(Arc<Mutex<Inner>>);
+pub struct StatusFetcher(Arc<Mutex<Inner>>);
 
-impl Status {
+impl StatusFetcher {
     pub async fn new() -> Self {
         let mut inner = Inner {
             capacity: 0,
@@ -27,17 +28,22 @@ impl Status {
 
         inner.update_status().await;
 
-        Self(Arc::new(Mutex::new(inner)))
+        let inner = Arc::new(Mutex::new(inner));
+
+        tokio::spawn(fetcher_task(inner.clone()));
+
+        Self(inner)
     }
 
     pub async fn get(&mut self) -> u8 {
-        let mut inner = self.0.lock().await;
+        self.0.lock().await.capacity
+    }
+}
 
-        if inner.last_fetch.elapsed() > Duration::from_secs(config::get().status_validity) {
-            inner.update_status().await;
-        };
-
-        inner.capacity
+async fn fetcher_task(inner: Arc<Mutex<Inner>>) {
+    loop {
+        inner.lock().await.update_status().await;
+        sleep(Duration::from_secs(config::get().fetch_interval)).await;
     }
 }
 

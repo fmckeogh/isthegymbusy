@@ -7,7 +7,7 @@ processes = []
 
 [env]
   ADDRESS = "0.0.0.0:8080"
-  STATUS_VALIDITY = "60"
+  FETCH_INTERVAL = "60"
   HISTORY_PATH = "/data/history"
   RUST_LOG = "info,tower_http::trace::on_request=warn"
 
