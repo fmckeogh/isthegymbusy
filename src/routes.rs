@@ -34,15 +34,15 @@ pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
 
         body {
             ."p-5" {
-                h2 ."text-center" { "Is the gym busy?" }
+                h2 ."text-center" style="font-size: 400%;" { "Is the gym busy?" }
 
                 @if capacity > THRESHOLD {
-                    h1 ."display-1 text-center text-danger" { "Yes" }
+                    h1 ."display-1 text-center text-danger" style="font-size: 1500%;" { "Yes" }
                 } @else {
-                    h1 ."display-1 text-center text-success" { "No" }
+                    h1 ."display-1 text-center text-success" style="font-size: 1500%;" { "No" }
                 }
 
-                h3 ."text-center" { "Current occupancy: " (capacity) "%" }
+                h3 ."text-center" style="font-size: 500%;" { "Current occupancy: " (capacity) "%" }
             }
         }
     };
@@ -58,7 +58,7 @@ pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
         CACHE_CONTROL,
         HeaderValue::from_str(&format!(
             "public, max-age={}, immutable",
-            config::get().status_validity
+            config::get().status_validity / 4
         ))
         .unwrap(),
     );
@@ -70,7 +70,6 @@ fn header() -> Markup {
         (DOCTYPE)
         head {
             meta charset="utf-8";
-            meta name="viewport" content="width=device-width, initial-scale=1";
 
             title { "Is the gym busy?" }
 
