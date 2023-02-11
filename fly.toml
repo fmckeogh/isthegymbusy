@@ -8,11 +8,16 @@ processes = []
 [env]
   ADDRESS = "0.0.0.0:8080"
   STATUS_VALIDITY = "60"
+  HISTORY_PATH = "/data/history"
   RUST_LOG = "info,tower_http::trace::on_request=warn"
 
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
+
+[mounts]
+source="isthegymbusy_data"
+destination="/data"
 
 [[services]]
   internal_port = 8080

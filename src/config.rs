@@ -26,6 +26,8 @@ pub struct Config {
 
     /// Number of seconds status will be cached
     pub status_validity: u64,
+
+    pub history_path: String,
 }
 
 impl Config {

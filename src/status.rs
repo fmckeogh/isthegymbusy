@@ -1,11 +1,11 @@
 use {
-    crate::config,
+    crate::{config, history::PersistentHistory},
     futures::lock::Mutex,
     regex::Regex,
     reqwest::Client,
     std::{
         sync::Arc,
-        time::{Duration, Instant},
+        time::{Duration, Instant, SystemTime, UNIX_EPOCH},
     },
     tracing::info,
 };
@@ -20,9 +20,9 @@ impl Status {
         let mut inner = Inner {
             capacity: 0,
             last_fetch: Instant::now(),
-
             client: Client::new(),
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
+            history: PersistentHistory::open(&config::get().history_path),
         };
 
         inner.update_status().await;
@@ -46,6 +46,7 @@ pub struct Inner {
     last_fetch: Instant,
     client: Client,
     regex: Regex,
+    history: PersistentHistory,
 }
 
 impl Inner {
@@ -69,5 +70,13 @@ impl Inner {
         info!("Finished status fetch, got capacity: {}", self.capacity);
 
         self.last_fetch = Instant::now();
+
+        self.history.append(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            self.capacity,
+        );
     }
 }
