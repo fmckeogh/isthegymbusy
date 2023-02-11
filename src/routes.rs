@@ -1,8 +1,14 @@
 use {
     crate::status::Status,
-    axum::{extract::State, http::StatusCode, response::IntoResponse},
+    axum::{
+        extract::State,
+        http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, StatusCode},
+        response::IntoResponse,
+    },
     maud::{html, Markup, DOCTYPE},
 };
+
+const THRESHOLD: u8 = 80;
 
 /// Tests node health
 pub async fn health() -> impl IntoResponse {
@@ -20,14 +26,14 @@ pub async fn health() -> impl IntoResponse {
 pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
     let capacity = status.get().await;
 
-    html! {
+    let html = html! {
         (header())
 
         body {
             ."p-5" {
                 h2 ."text-center" { "Is the gym busy?" }
 
-                @if capacity > 60 {
+                @if capacity > THRESHOLD {
                     h1 ."display-1 text-center text-danger" { "Yes" }
                 } @else {
                     h1 ."display-1 text-center text-success" { "No" }
@@ -36,7 +42,17 @@ pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
                 h3 ."text-center" { "Current occupancy: " (capacity) "%" }
             }
         }
-    }
+    };
+
+    let body = minify_html::minify(html.0.as_bytes(), &minify_html::Cfg::new());
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        CONTENT_TYPE,
+        HeaderValue::from_static("text/html; charset=utf-8"),
+    );
+
+    (headers, body)
 }
 
 fn header() -> Markup {
