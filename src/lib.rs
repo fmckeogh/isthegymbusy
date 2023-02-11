@@ -8,6 +8,7 @@ use {
     color_eyre::eyre::Result,
     std::{net::SocketAddr, time::Duration},
     tokio::task::JoinHandle,
+    tower_http::compression::CompressionLayer,
     tracing::info,
 };
 
@@ -27,11 +28,14 @@ pub async fn start(config: &Config) -> Result<Handle> {
 
     let state = Status::new(Duration::from_secs(config.status_validity)).await;
 
+    let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
+
     // create router with all routes and tracing layer
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
         .with_state(state)
+        .layer(compression)
         .layer(create_trace_layer());
 
     // bind axum server to socket address and use router to create a service factory

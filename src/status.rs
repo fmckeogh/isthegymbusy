@@ -6,7 +6,7 @@ use {
         sync::Arc,
         time::{Duration, Instant},
     },
-    tracing::trace,
+    tracing::info,
 };
 
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
@@ -50,7 +50,8 @@ pub struct Inner {
 
 impl Inner {
     async fn update_status(&mut self) {
-        trace!("fetching current status");
+        info!("Starting status fetch");
+
         let res = self.client.get(URL).send().await.unwrap();
 
         let text = res.text().await.unwrap();
@@ -65,7 +66,7 @@ impl Inner {
             .parse()
             .unwrap();
 
-        trace!("got capacity: {}", self.capacity);
+        info!("Finished status fetch, got capacity: {}", self.capacity);
 
         self.last_fetch = Instant::now();
     }
