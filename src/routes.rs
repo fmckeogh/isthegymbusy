@@ -1,8 +1,11 @@
 use {
-    crate::status::Status,
+    crate::{config, status::Status},
     axum::{
         extract::State,
-        http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, StatusCode},
+        http::{
+            header::{CACHE_CONTROL, CONTENT_TYPE},
+            HeaderMap, HeaderValue, StatusCode,
+        },
         response::IntoResponse,
     },
     maud::{html, Markup, DOCTYPE},
@@ -51,7 +54,14 @@ pub async fn index(State(mut status): State<Status>) -> impl IntoResponse {
         CONTENT_TYPE,
         HeaderValue::from_static("text/html; charset=utf-8"),
     );
-
+    headers.insert(
+        CACHE_CONTROL,
+        HeaderValue::from_str(&format!(
+            "public, max-age={}, immutable",
+            config::get().status_validity
+        ))
+        .unwrap(),
+    );
     (headers, body)
 }
 

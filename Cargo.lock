@@ -67,6 +67,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-once-cell"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "390a110411bbc7c93b77a736cbd694f64cb06dfa2702173f63169d7a1e1b5298"
+
+[[package]]
 name = "async-trait"
 version = "0.1.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -667,6 +673,7 @@ checksum = "30e22bd8629359895450b59ea7a776c850561b96a3b1d31321c1949d9e6c9146"
 name = "isthegymbusy"
 version = "0.1.0"
 dependencies = [
+ "async-once-cell",
  "axum",
  "color-eyre",
  "config",

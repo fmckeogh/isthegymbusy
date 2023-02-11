@@ -6,7 +6,7 @@ use {
     },
     axum::{routing::get, Router},
     color_eyre::eyre::Result,
-    std::{net::SocketAddr, time::Duration},
+    std::net::SocketAddr,
     tokio::task::JoinHandle,
     tower_http::compression::CompressionLayer,
     tracing::info,
@@ -26,7 +26,9 @@ pub async fn start(config: &Config) -> Result<Handle> {
     #[cfg(not(test))]
     crate::log::tracing_init()?;
 
-    let state = Status::new(Duration::from_secs(config.status_validity)).await;
+    config::init(config.clone()).await;
+
+    let state = Status::new().await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -39,7 +41,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .layer(create_trace_layer());
 
     // bind axum server to socket address and use router to create a service factory
-    let server = axum::Server::bind(&config.address).serve(router.into_make_service());
+    let server = axum::Server::bind(&config::get().address).serve(router.into_make_service());
 
     // get address server is bound to (may be different to address passed to Server::bind)
     let address = server.local_addr();
