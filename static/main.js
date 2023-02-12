@@ -15,7 +15,7 @@ var options = {
 };
 
 window.onload = (event) => {
-  fetch("/history.txt")
+  fetch("/history.csv")
     .then((response) => {
       console.log(response.status);
       return response.text();

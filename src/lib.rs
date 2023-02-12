@@ -38,7 +38,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
-        .route("/history.txt", get(history))
+        .route("/history.csv", get(history))
         .fallback(static_files)
         .with_state(status)
         .layer(compression)
