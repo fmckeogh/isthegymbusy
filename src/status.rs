@@ -8,7 +8,7 @@ use {
     reqwest::Client,
     std::{
         sync::Arc,
-        time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+        time::{Duration, Instant},
     },
     tokio::time::sleep,
     tracing::info,
@@ -80,12 +80,7 @@ impl Inner {
 
         self.last_fetch = Instant::now();
 
-        self.history.append(
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-            self.capacity,
-        );
+        self.history
+            .append(chrono::Utc::now().timestamp(), self.capacity);
     }
 }

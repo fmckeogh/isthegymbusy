@@ -24,7 +24,7 @@ pub struct Header {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Entry {
     pub value: u8,
-    pub timestamp: u64,
+    pub timestamp: i64,
 }
 
 #[repr(C)]
@@ -34,7 +34,7 @@ struct RawEntry {
     _pad0: u8,
     _pad1: u16,
     _pad2: u32,
-    timestamp: u64,
+    timestamp: i64,
 }
 
 pub struct PersistentHistory {
@@ -74,7 +74,7 @@ impl PersistentHistory {
         entries
     }
 
-    pub fn append(&mut self, timestamp: u64, value: u8) {
+    pub fn append(&mut self, timestamp: i64, value: u8) {
         let pos = from_bytes::<Header>(&self.mmap[..HEADER_SIZE]).write_pos as usize;
         let start = HEADER_SIZE + pos * RAW_ENTRY_SIZE;
 
@@ -147,7 +147,7 @@ mod tests {
             history.append(i, 0xAA);
         }
 
-        let expected = ((500_000 - super::NUM_ENTRIES + 1)..=500_000)
+        let expected = ((500_000 - super::NUM_ENTRIES as i64 + 1)..=500_000)
             .into_iter()
             .map(|i| Entry {
                 timestamp: i,
