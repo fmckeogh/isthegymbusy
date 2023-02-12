@@ -14,7 +14,6 @@ window.onload = (event) => {
       var data = {
         datasets: [
           {
-            label: "Gym Occupancy",
             parsing: false,
             data: entries,
           },
@@ -28,14 +27,25 @@ window.onload = (event) => {
         data: data,
         options: {
           responsive: true,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
           elements: {
             point: {
               radius: 0,
+            },
+            line: {
+              borderWidth: 5,
             },
           },
           scales: {
             y: {
               ticks: {
+                font: {
+                  size: 24,
+                },
                 callback: function (value, _index, _ticks) {
                   return value + "%";
                 },
@@ -52,6 +62,11 @@ window.onload = (event) => {
                   context.tick.major ? "#A5A5A5" : Chart.defaults.borderColor,
               },
               ticks: {
+                major: { enabled: true },
+                source: "auto",
+                font: {
+                  size: 24,
+                },
                 callback: function (value, index, ticks) {
                   let time = luxon.DateTime.fromMillis(value);
 
@@ -59,10 +74,12 @@ window.onload = (event) => {
                     return time.toFormat("cccc");
                   }
 
-                  return time.hour + ":00";
+                  if (time.hour % 3 == 0) {
+                    return time.hour + ":00";
+                  }
+
+                  return null;
                 },
-                major: { enabled: true },
-                source: "auto",
               },
             },
           },
