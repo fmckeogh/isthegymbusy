@@ -1,43 +1,66 @@
-var options = {
-  showPoint: false,
-  lineSmooth: Chartist.Interpolation.simple(),
-  axisY: {
-    scaleMinSpace: 50,
-    onlyInteger: true,
-  },
-  axisX: {
-    type: Chartist.FixedScaleAxis,
-    divisor: 7,
-    labelInterpolationFnc: function (date) {
-      return moment(date).format("MMM D");
-    },
-  },
-};
-
 window.onload = (event) => {
   fetch("/history.csv")
     .then((response) => {
-      console.log(response.status);
       return response.text();
     })
     .then((text) => {
-      console.log(text);
-
       var entries = text.split("\n").map((s) => {
-        var entry = {
-          x: moment.unix(parseInt(s.split(" ")[0])).toDate(),
-          y: s.split(" ")[1],
+        return {
+          x: parseInt(s.split(" ")[0]) * 1000,
+          y: parseInt(s.split(" ")[1]),
         };
-
-        return entry;
       });
 
-      console.log(entries);
-
       var data = {
-        series: [{ data: entries }],
+        datasets: [
+          {
+            label: "Gym Occupancy",
+            parsing: false,
+            data: entries,
+          },
+        ],
       };
 
-      new Chartist.LineChart(".ct-chart", data, options);
+      const ctx = document.getElementById("chart");
+
+      const config = {
+        type: "line",
+        data: data,
+        options: {
+          responsive: true,
+          elements: {
+            point: {
+              radius: 0,
+            },
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function (value, _index, _ticks) {
+                  return value + "%";
+                },
+              },
+            },
+            x: {
+              type: "time",
+              time: {
+                displayFormats: {
+                  day: "cccc",
+                  hour: "HH:00",
+                },
+                minUnit: "hour",
+              },
+              ticks: {
+                major: { enabled: true },
+                source: "auto",
+              },
+            },
+          },
+        },
+      };
+
+      var chart = new Chart(ctx, config);
+
+      chart.update();
     });
 };

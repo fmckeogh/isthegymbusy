@@ -25,13 +25,13 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
 
             title { "Is the gym busy?" }
 
-            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css";
-            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.min.css";
-            script src="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.umd.min.js" {}
-            script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js" {}
+            link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css";
+            script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.umd.min.js" {}
+            script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.2.1/luxon.min.js" {}
+            script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-luxon/1.3.1/chartjs-adapter-luxon.umd.min.js" {}
 
             link rel="stylesheet" href="/style.css";
-            script src="/main.js" {}
+            script src="/main.js" type="module" {}
         }
 
         body {
@@ -46,7 +46,7 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
 
                 h3 ."text-center" style="font-size: 500%;" { "Current occupancy: " (capacity) "%" }
 
-                ."ct-chart ct-double-octave" { }
+                canvas #"chart" {}
             }
         }
     };
