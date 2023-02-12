@@ -44,13 +44,23 @@ window.onload = (event) => {
             x: {
               type: "time",
               time: {
-                displayFormats: {
-                  day: "cccc",
-                  hour: "HH:00",
-                },
                 minUnit: "hour",
               },
+              grid: {
+                lineWidth: (context) => (context.tick.major ? 3 : 1),
+                color: (context) =>
+                  context.tick.major ? "#A5A5A5" : Chart.defaults.borderColor,
+              },
               ticks: {
+                callback: function (value, index, ticks) {
+                  let time = luxon.DateTime.fromMillis(value);
+
+                  if (time.hour == 0) {
+                    return time.toFormat("cccc");
+                  }
+
+                  return time.hour + ":00";
+                },
                 major: { enabled: true },
                 source: "auto",
               },
