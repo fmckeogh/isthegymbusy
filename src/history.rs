@@ -23,8 +23,8 @@ pub struct Header {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Entry {
-    value: u8,
-    timestamp: u64,
+    pub value: u8,
+    pub timestamp: u64,
 }
 
 #[repr(C)]
@@ -54,11 +54,7 @@ impl PersistentHistory {
 
         let mmap = unsafe { MmapMut::map_mut(&file) }.unwrap();
 
-        let celf = Self { mmap };
-
-        dbg!(celf.get());
-
-        celf
+        Self { mmap }
     }
 
     pub fn get(&self) -> Vec<Entry> {

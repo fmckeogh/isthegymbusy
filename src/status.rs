@@ -1,5 +1,8 @@
 use {
-    crate::{config, history::PersistentHistory},
+    crate::{
+        config,
+        history::{Entry, PersistentHistory},
+    },
     futures::lock::Mutex,
     regex::Regex,
     reqwest::Client,
@@ -18,25 +21,25 @@ pub struct StatusFetcher(Arc<Mutex<Inner>>);
 
 impl StatusFetcher {
     pub async fn new() -> Self {
-        let mut inner = Inner {
+        let inner = Arc::new(Mutex::new(Inner {
             capacity: 0,
             last_fetch: Instant::now(),
             client: Client::new(),
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
             history: PersistentHistory::open(&config::get().history_path),
-        };
-
-        inner.update_status().await;
-
-        let inner = Arc::new(Mutex::new(inner));
+        }));
 
         tokio::spawn(fetcher_task(inner.clone()));
 
         Self(inner)
     }
 
-    pub async fn get(&mut self) -> u8 {
+    pub async fn capacity(&self) -> u8 {
         self.0.lock().await.capacity
+    }
+
+    pub async fn history(&self) -> Vec<Entry> {
+        self.0.lock().await.history.get()
     }
 }
 

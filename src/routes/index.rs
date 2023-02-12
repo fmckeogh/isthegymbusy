@@ -4,33 +4,32 @@ use {
         extract::State,
         http::{
             header::{CACHE_CONTROL, CONTENT_TYPE},
-            HeaderMap, HeaderValue, StatusCode,
+            HeaderMap, HeaderValue,
         },
         response::IntoResponse,
     },
-    maud::{html, Markup, DOCTYPE},
+    maud::{html, DOCTYPE},
 };
 
 const THRESHOLD: u8 = 80;
 
-/// Tests node health
-pub async fn health() -> impl IntoResponse {
-    // todo fix this
-    let can_fetch_from_saint_sport = true;
-
-    if can_fetch_from_saint_sport {
-        StatusCode::OK
-    } else {
-        StatusCode::SERVICE_UNAVAILABLE
-    }
-}
-
 /// Index page handler
-pub async fn index(State(mut status): State<StatusFetcher>) -> impl IntoResponse {
-    let capacity = status.get().await;
+pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
+    let capacity = status.capacity().await;
 
     let html = html! {
-        (header())
+        (DOCTYPE)
+
+        head {
+            meta charset="utf-8";
+
+            title { "Is the gym busy?" }
+
+            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous";
+            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.min.css";
+            script src="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.umd.min.js" {}
+            script src="/main.js" {}
+        }
 
         body {
             ."p-5" {
@@ -43,6 +42,8 @@ pub async fn index(State(mut status): State<StatusFetcher>) -> impl IntoResponse
                 }
 
                 h3 ."text-center" style="font-size: 500%;" { "Current occupancy: " (capacity) "%" }
+
+                ."ct-chart" { }
             }
         }
     };
@@ -62,18 +63,6 @@ pub async fn index(State(mut status): State<StatusFetcher>) -> impl IntoResponse
         ))
         .unwrap(),
     );
+
     (headers, body)
-}
-
-fn header() -> Markup {
-    html! {
-        (DOCTYPE)
-        head {
-            meta charset="utf-8";
-
-            title { "Is the gym busy?" }
-
-            link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous";
-        }
-    }
 }

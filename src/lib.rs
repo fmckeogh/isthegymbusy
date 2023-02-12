@@ -1,7 +1,7 @@
 use {
     crate::{
         log::create_trace_layer,
-        routes::{health, index},
+        routes::{health, history, index, static_files},
         status::StatusFetcher,
     },
     axum::{routing::get, Router},
@@ -17,6 +17,7 @@ pub mod error;
 pub mod history;
 pub mod log;
 pub mod routes;
+
 pub mod status;
 
 pub use crate::config::Config;
@@ -37,6 +38,8 @@ pub async fn start(config: &Config) -> Result<Handle> {
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
+        .route("/history", get(history))
+        .fallback(static_files)
         .with_state(status)
         .layer(compression)
         .layer(create_trace_layer());
