@@ -1,0 +1,8 @@
+.ct-series-a .ct-line {
+    stroke: red;
+    stroke-width: 6px;
+}
+
+.ct-label {
+    font-size: large;
+}

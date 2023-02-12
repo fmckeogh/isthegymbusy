@@ -1,31 +1,41 @@
 var options = {
   showPoint: false,
   lineSmooth: Chartist.Interpolation.simple(),
-  axisX: {},
+  axisY: {
+    scaleMinSpace: 50,
+    onlyInteger: true,
+  },
+  axisX: {
+    type: Chartist.FixedScaleAxis,
+    divisor: 7,
+    labelInterpolationFnc: function (date) {
+      return moment(date).format("MMM D");
+    },
+  },
 };
 
 window.onload = (event) => {
-  fetch("/history")
+  fetch("/history.txt")
     .then((response) => {
       console.log(response.status);
-      return response.blob();
+      return response.text();
     })
-    .then((blob) => {
-      console.log(blob);
-      return blob.arrayBuffer();
-    })
-    .then((buf) => {
-      var view = new DataView(buf);
+    .then((text) => {
+      console.log(text);
 
-      var array = [];
+      var entries = text.split("\n").map((s) => {
+        var entry = {
+          x: moment.unix(parseInt(s.split(" ")[0])).toDate(),
+          y: s.split(" ")[1],
+        };
 
-      for (let i = 0; i < buf.byteLength; i++) {
-        array.push(view.getUint8(i));
-      }
+        return entry;
+      });
+
+      console.log(entries);
 
       var data = {
-        labels: [],
-        series: [array],
+        series: [{ data: entries }],
       };
 
       new Chartist.LineChart(".ct-chart", data, options);

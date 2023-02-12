@@ -25,9 +25,12 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
 
             title { "Is the gym busy?" }
 
-            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous";
+            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css";
             link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.min.css";
             script src="https://cdn.jsdelivr.net/npm/chartist@1.3.0/dist/index.umd.min.js" {}
+            script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js" {}
+
+            link rel="stylesheet" href="/style.css";
             script src="/main.js" {}
         }
 
@@ -43,7 +46,7 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
 
                 h3 ."text-center" style="font-size: 500%;" { "Current occupancy: " (capacity) "%" }
 
-                ."ct-chart" { }
+                ."ct-chart ct-double-octave" { }
             }
         }
     };

@@ -1,5 +1,5 @@
 use {
-    crate::status::StatusFetcher,
+    crate::{history::Entry, status::StatusFetcher},
     axum::{
         extract::State,
         http::{
@@ -8,21 +8,20 @@ use {
         },
         response::IntoResponse,
     },
+    std::fmt::Write,
 };
 
 pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
-    let body = status
+    let mut body = String::new();
+
+    status
         .history()
         .await
         .iter()
-        .map(|e| e.value)
-        .collect::<Vec<_>>();
+        .for_each(|Entry { timestamp, value }| writeln!(body, "{timestamp} {value}").unwrap());
 
     let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_static("application/octet-stream"),
-    );
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
     headers.insert(
         CACHE_CONTROL,
         HeaderValue::from_static("public, max-age=86400, immutable"),
