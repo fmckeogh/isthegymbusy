@@ -24,7 +24,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
     headers.insert(
         CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=86400, immutable"),
+        HeaderValue::from_static("public, max-age=3600, immutable"),
     );
 
     (headers, body)
