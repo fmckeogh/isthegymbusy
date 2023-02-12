@@ -3,14 +3,15 @@
 use {
     bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable},
     memmap2::MmapMut,
-    std::{fs, mem::size_of, path::Path},
+    std::{cmp::Ordering, fs, mem::size_of, path::Path},
+    tracing::{info, warn},
 };
 
 const HEADER_SIZE: usize = size_of::<Header>();
 const RAW_ENTRY_SIZE: usize = size_of::<RawEntry>();
 
-/// 7 days worth of entries at 1 per minute
-const NUM_ENTRIES: u64 = 7 * 24 * 60;
+/// 1 year worth of entries at 1 per minute
+const NUM_ENTRIES: u64 = 365 * 24 * 60;
 
 /// Total file size is the size of the header
 const FILE_SIZE: u64 = HEADER_SIZE as u64 + NUM_ENTRIES * RAW_ENTRY_SIZE as u64;
@@ -43,6 +44,8 @@ pub struct PersistentHistory {
 
 impl PersistentHistory {
     pub fn open<P: AsRef<Path>>(path: P) -> Self {
+        info!("opening history file");
+
         let file = fs::OpenOptions::new()
             .create(true)
             .read(true)
@@ -50,11 +53,28 @@ impl PersistentHistory {
             .open(path)
             .unwrap();
 
-        file.set_len(FILE_SIZE).unwrap();
+        let current_len = file.metadata().unwrap().len();
+        match current_len.cmp(&FILE_SIZE) {
+            Ordering::Less => {
+                warn!("history file size ({current_len} bytes) less than FILE_SIZE ({FILE_SIZE} bytes), expanding...");
+                file.set_len(FILE_SIZE).unwrap();
+            }
+            Ordering::Equal => (),
+            Ordering::Greater => {
+                panic!("history file size ({current_len} bytes) greater than FILE_SIZE ({FILE_SIZE} bytes)");
+            }
+        }
 
         let mmap = unsafe { MmapMut::map_mut(&file) }.unwrap();
 
-        Self { mmap }
+        let celf = Self { mmap };
+
+        info!(
+            "file size {current_len} bytes, {}/{NUM_ENTRIES} entries occupied",
+            celf.get().len()
+        );
+
+        celf
     }
 
     pub fn get(&self) -> Vec<Entry> {
@@ -143,11 +163,11 @@ mod tests {
         let (_dir, path) = get_test_path();
         let mut history = PersistentHistory::open(path);
 
-        for i in 1..=500_000 {
+        for i in 1..=1_000_000 {
             history.append(i, 0xAA);
         }
 
-        let expected = ((500_000 - super::NUM_ENTRIES as i64 + 1)..=500_000)
+        let expected = ((1_000_000 - super::NUM_ENTRIES as i64 + 1)..=1_000_000)
             .into_iter()
             .map(|i| Entry {
                 timestamp: i,
