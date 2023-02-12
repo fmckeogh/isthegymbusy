@@ -1,16 +1,29 @@
-window.onload = (event) => {
-  fetch("/history.csv")
+window.onload = async (event) => {
+  fetch("/history.bin")
     .then((response) => {
-      return response.text();
+      return Promise.all([
+        response.blob().then((blob) => blob.arrayBuffer()),
+        parseInt(response.headers.get("history-end")),
+        parseInt(response.headers.get("history-interval")),
+      ]);
     })
-    .then((text) => {
-      var entries = text.split("\n").map((s) => {
-        return {
-          x: parseInt(s.split(" ")[0]) * 1000,
-          y: parseInt(s.split(" ")[1]),
-        };
-      });
+    .then(([array, end_timestamp, interval]) => {
+      var view = new DataView(array);
 
+      var entries = [];
+
+      for (let i = 0; i < array.byteLength; i++) {
+        let value = view.getUint8(i);
+
+        entries.push({
+          x: (end_timestamp - i * interval) * 1000,
+          y: value == 0xff ? null : value,
+        });
+      }
+
+      return entries;
+    })
+    .then((entries) => {
       var data = {
         datasets: [
           {

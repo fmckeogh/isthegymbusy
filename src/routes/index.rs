@@ -46,7 +46,10 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
 
                 h3 ."text-center" style="font-size: 500%;" { "Current occupancy: " (capacity) "%" }
 
-                canvas #"chart" {}
+                ."py-5" {
+                    h4 ."text-center" style="font-size: 300%;" { "48-hour History" }
+                    canvas #"chart" {}
+                }
             }
         }
     };
