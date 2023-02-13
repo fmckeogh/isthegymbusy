@@ -60,6 +60,7 @@ window.onload = async (_event) => {
         type: "line",
         data: data,
         options: {
+          maintainAspectRatio: false,
           responsive: true,
           plugins: {
             legend: {
