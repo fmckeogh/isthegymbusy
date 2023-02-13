@@ -13,10 +13,11 @@ COPY Cargo.lock .
 COPY Cargo.toml .
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# build app
+# test and build app
 COPY src src
 COPY static static
 RUN touch src/main.rs
+RUN cargo test --release
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM scratch
