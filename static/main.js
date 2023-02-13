@@ -8,7 +8,7 @@ window.onload = async (_event) => {
       document.getElementById("occupancy").innerText = occupancy;
 
       var answer = document.getElementById("answer");
-      console.log(answer);
+
       if (occupancy >= 75) {
         answer.innerText = "Yes";
         answer.classList.remove("text-success");
