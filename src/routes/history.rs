@@ -1,5 +1,5 @@
 use {
-    crate::{history::Entry, status::StatusFetcher},
+    crate::{history::Entry, status::StatusFetcher, HISTORY_MAX_AGE},
     axum::{
         extract::State,
         http::{
@@ -68,7 +68,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
     );
     headers.insert(
         CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=3600, immutable"),
+        HeaderValue::from_str(&format!("public, max-age={HISTORY_MAX_AGE}, immutable")).unwrap(),
     );
 
     headers.insert(

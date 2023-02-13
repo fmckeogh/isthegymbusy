@@ -1,5 +1,5 @@
 use {
-    crate::{config, StatusFetcher},
+    crate::{config, StatusFetcher, STATUS_MAX_AGE_DIVISOR},
     axum::{
         extract::State,
         http::{
@@ -23,7 +23,7 @@ pub async fn status(State(status): State<StatusFetcher>) -> impl IntoResponse {
         CACHE_CONTROL,
         HeaderValue::from_str(&format!(
             "public, max-age={}, immutable",
-            config::get().fetch_interval / 2
+            config::get().fetch_interval / STATUS_MAX_AGE_DIVISOR
         ))
         .unwrap(),
     );

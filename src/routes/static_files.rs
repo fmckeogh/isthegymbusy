@@ -1,4 +1,5 @@
 use {
+    crate::STATIC_FILES_MAX_AGE,
     axum::{
         http::{
             header::{CACHE_CONTROL, CONTENT_TYPE},
@@ -28,7 +29,10 @@ pub async fn static_files(uri: Uri) -> Response {
     );
     headers.insert(
         CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=86400, immutable"),
+        HeaderValue::from_str(&format!(
+            "public, max-age={STATIC_FILES_MAX_AGE}, immutable"
+        ))
+        .unwrap(),
     );
 
     (headers, file.contents()).into_response()
