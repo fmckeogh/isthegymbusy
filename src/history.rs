@@ -98,13 +98,24 @@ impl PersistentHistory {
         let pos = from_bytes::<Header>(&self.mmap[..HEADER_SIZE]).write_pos as usize;
         let start = HEADER_SIZE + pos * RAW_ENTRY_SIZE;
 
-        let raw_entry = from_bytes_mut::<RawEntry>(&mut self.mmap[start..start + RAW_ENTRY_SIZE]);
+        // write next timestamp and value, then flush
+        {
+            let raw_entry =
+                from_bytes_mut::<RawEntry>(&mut self.mmap[start..start + RAW_ENTRY_SIZE]);
 
-        raw_entry.timestamp = timestamp;
-        raw_entry.value = value;
+            raw_entry.timestamp = timestamp;
+            raw_entry.value = value;
 
-        let header = from_bytes_mut::<Header>(&mut self.mmap[..HEADER_SIZE]);
-        header.write_pos = (header.write_pos + 1) % NUM_ENTRIES;
+            self.mmap.flush().unwrap();
+        }
+
+        // only after successful write increment write_pos, a crash at any time cannot result in invalid data being written only loss of 1 entry
+        {
+            let header = from_bytes_mut::<Header>(&mut self.mmap[..HEADER_SIZE]);
+            header.write_pos = (header.write_pos + 1) % NUM_ENTRIES;
+
+            self.mmap.flush().unwrap();
+        }
     }
 }
 
