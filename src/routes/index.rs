@@ -52,6 +52,16 @@ pub async fn index(State(status): State<StatusFetcher>) -> impl IntoResponse {
                 }
             }
         }
+
+        footer ."bg-light text-center text-lg-start" {
+            ."text-center p-3" {
+                h5 {
+                    "For feedback or issues please email " a href="mailto:help@isthegymbusy.uk" { "help@isthegymbusy.uk" }
+                }
+                "© 2023 Copyright Ferdia McKeogh"
+            }
+        }
+
     };
 
     let body = minify_html::minify(html.0.as_bytes(), &minify_html::Cfg::new());
