@@ -4,8 +4,20 @@ window.onload = async (_event) => {
       return response.arrayBuffer();
     })
     .then((arraybuf) => {
-      var view = new DataView(arraybuf);
-      document.getElementById("occupancy").innerText = view.getUint8(0);
+      var occupancy = new DataView(arraybuf).getUint8(0);
+      document.getElementById("occupancy").innerText = occupancy;
+
+      var answer = document.getElementById("answer");
+      console.log(answer);
+      if (occupancy >= 75) {
+        answer.innerText = "Yes";
+        answer.classList.remove("text-success");
+        answer.classList.add("text-danger");
+      } else {
+        answer.innerText = "No";
+        answer.classList.remove("text-danger");
+        answer.classList.add("text-success");
+      }
     });
 
   fetch("/history.bin")
