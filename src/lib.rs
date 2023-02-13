@@ -28,8 +28,8 @@ const STATUS_MAX_AGE_DIVISOR: u64 = 2;
 /// history.bin cached for 1 hour
 const HISTORY_MAX_AGE: u64 = 3600;
 
-/// Static files cached for 1 day
-const STATIC_FILES_MAX_AGE: u64 = 86400;
+/// Static files cached for 1 hour
+const STATIC_FILES_MAX_AGE: u64 = 3600;
 
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
