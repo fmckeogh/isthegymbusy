@@ -106,7 +106,8 @@ impl PersistentHistory {
             raw_entry.timestamp = timestamp;
             raw_entry.value = value;
 
-            self.mmap.flush().unwrap();
+            #[cfg(not(test))]
+            self.mmap.flush_range(start, RAW_ENTRY_SIZE).unwrap();
         }
 
         // only after successful write increment write_pos, a crash at any time cannot result in invalid data being written only loss of 1 entry
@@ -114,7 +115,8 @@ impl PersistentHistory {
             let header = from_bytes_mut::<Header>(&mut self.mmap[..HEADER_SIZE]);
             header.write_pos = (header.write_pos + 1) % NUM_ENTRIES;
 
-            self.mmap.flush().unwrap();
+            #[cfg(not(test))]
+            self.mmap.flush_range(0, HEADER_SIZE).unwrap();
         }
     }
 }
@@ -186,7 +188,39 @@ mod tests {
             })
             .collect::<Vec<_>>();
 
-        assert_eq!(history.get().len(), super::NUM_ENTRIES as usize);
         assert_eq!(history.get(), expected);
+    }
+
+    #[test]
+    fn reopen() {
+        let expected = ((1_000_000 - super::NUM_ENTRIES as i64 + 1)..=1_000_000)
+            .into_iter()
+            .map(|i| Entry {
+                timestamp: i,
+                value: rand::random(),
+            })
+            .collect::<Vec<_>>();
+
+        let (_dir, path) = get_test_path();
+
+        {
+            let mut history = PersistentHistory::open(&path);
+
+            // add random data that will be overwritten
+            for _ in 1..=100_000 {
+                history.append(rand::random::<i64>() + 1, rand::random());
+            }
+
+            for entry in &expected {
+                history.append(entry.timestamp, entry.value)
+            }
+
+            assert_eq!(history.get(), expected);
+        }
+
+        {
+            let history = PersistentHistory::open(&path);
+            assert_eq!(history.get(), expected);
+        }
     }
 }
