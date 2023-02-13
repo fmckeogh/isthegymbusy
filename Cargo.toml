@@ -13,7 +13,6 @@ axum = "0.6.4"
 color-eyre = "0.6.2"
 config = "0.13.3"
 dotenv = "0.15.0"
-maud = { git = "https://github.com/lambda-fairy/maud", rev = "daa4354", features = ["axum"] }
 serde = { version = "1.0.152", features = ["derive"] }
 tokio = { version = "1.25.0", features = ["full"] }
 tracing = { version = "0.1.37" }
@@ -25,7 +24,6 @@ parking_lot = "0.12.1"
 reqwest = { version = "0.11.14", default-features = false, features = ["rustls-tls"] }
 futures = "0.3.26"
 regex = "1.7.1"
-minify-html = "0.10.8"
 async-once-cell = "0.4.3"
 memmap2 = "0.5.8"
 bytemuck = { version = "1.13.0", features = ["derive"] }

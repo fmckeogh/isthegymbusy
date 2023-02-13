@@ -62,7 +62,10 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
     assert!(body.len() == NUM_INTERVALS as usize);
 
     let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
+    headers.insert(
+        CONTENT_TYPE,
+        HeaderValue::from_static("application/octet-stream"),
+    );
     headers.insert(
         CACHE_CONTROL,
         HeaderValue::from_static("public, max-age=3600, immutable"),

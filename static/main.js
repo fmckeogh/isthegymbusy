@@ -1,4 +1,14 @@
-window.onload = async (event) => {
+window.onload = async (_event) => {
+  fetch("/status.bin")
+    .then((response) => {
+      console.log(response);
+      return response.arrayBuffer();
+    })
+    .then((arraybuf) => {
+      var view = new DataView(arraybuf);
+      document.getElementById("occupancy").innerText = view.getUint8(0);
+    });
+
   fetch("/history.bin")
     .then((response) => {
       return Promise.all([

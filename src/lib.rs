@@ -1,7 +1,7 @@
 use {
     crate::{
         log::create_trace_layer,
-        routes::{health, history, index, static_files},
+        routes::{health, history, index, static_files, status},
         status::StatusFetcher,
     },
     axum::{routing::get, Router},
@@ -30,7 +30,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
 
     config::init(config.clone()).await;
 
-    let status = StatusFetcher::new().await;
+    let status_fetcher = StatusFetcher::new().await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -39,8 +39,9 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .route("/health", get(health))
         .route("/", get(index))
         .route("/history.bin", get(history))
+        .route("/status.bin", get(status))
         .fallback(static_files)
-        .with_state(status)
+        .with_state(status_fetcher)
         .layer(compression)
         .layer(create_trace_layer());
 
