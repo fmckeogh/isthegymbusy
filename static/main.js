@@ -1,7 +1,6 @@
 window.onload = async (_event) => {
   fetch("/status.bin")
     .then((response) => {
-      console.log(response);
       return response.arrayBuffer();
     })
     .then((arraybuf) => {
@@ -12,7 +11,7 @@ window.onload = async (_event) => {
   fetch("/history.bin")
     .then((response) => {
       return Promise.all([
-        response.blob().then((blob) => blob.arrayBuffer()),
+        response.arrayBuffer(),
         parseInt(response.headers.get("history-end")),
         parseInt(response.headers.get("history-interval")),
       ]);
