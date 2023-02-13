@@ -29,7 +29,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
     let mut history_rev = history.iter().rev().peekable();
 
     //
-    for bucket_idx in 0..NUM_INTERVALS {
+    for bucket_idx in 1..=NUM_INTERVALS {
         let end = start_timestamp - i64::try_from(bucket_idx * INTERVAL).unwrap();
 
         let mut bucket = vec![];
