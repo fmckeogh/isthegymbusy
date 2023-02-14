@@ -22,14 +22,14 @@ pub mod status;
 
 pub use crate::config::Config;
 
-/// status.bin cached for half the fetch interval
-const STATUS_MAX_AGE_DIVISOR: u64 = 2;
+/// status.bin cached for quarter of the fetch interval
+const STATUS_MAX_AGE_DIVISOR: u64 = 4;
 
-/// history.bin cached for 1 hour
-const HISTORY_MAX_AGE: u64 = 3600;
+/// history.bin cached for 5 minutes
+const HISTORY_MAX_AGE: u64 = 5 * 60;
 
-/// Static files cached for 1 hour
-const STATIC_FILES_MAX_AGE: u64 = 3600;
+/// Static files cached for 15 minutes
+const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
 
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
