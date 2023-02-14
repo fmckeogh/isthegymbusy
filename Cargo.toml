@@ -9,7 +9,7 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-axum = "0.6.4"
+axum = "0.6.6"
 color-eyre = "0.6.2"
 config = "0.13.3"
 dotenv = "0.15.0"
