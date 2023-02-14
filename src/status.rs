@@ -11,7 +11,7 @@ use {
         time::{Duration, Instant},
     },
     tokio::time::sleep,
-    tracing::info,
+    tracing::{error, info},
 };
 
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
@@ -50,6 +50,8 @@ async fn fetcher_task(inner: Arc<Mutex<Inner>>) {
     }
 }
 
+pub enum UpdateError {}
+
 pub struct Inner {
     capacity: u8,
     last_fetch: Instant,
@@ -62,19 +64,37 @@ impl Inner {
     async fn update_status(&mut self) {
         info!("Starting status fetch");
 
-        let res = self.client.get(URL).send().await.unwrap();
+        let res = match self
+            .client
+            .get(URL)
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+        {
+            Ok(res) => res,
+            Err(e) => {
+                error!("GET request failed {e:?}");
+                return;
+            }
+        };
 
-        let text = res.text().await.unwrap();
+        let text = match res.text().await {
+            Ok(text) => text,
+            Err(e) => {
+                error!("response text failed {e:?}");
+                return;
+            }
+        };
 
-        self.capacity = self
-            .regex
-            .captures(&text)
-            .unwrap()
-            .get(1)
-            .unwrap()
-            .as_str()
-            .parse()
-            .unwrap();
+        let captures = match self.regex.captures(&text) {
+            Some(captures) => captures,
+            None => {
+                error!("regex failed, no captures");
+                return;
+            }
+        };
+
+        self.capacity = captures.get(1).unwrap().as_str().parse().unwrap();
 
         info!("Finished status fetch, got capacity: {}", self.capacity);
 
