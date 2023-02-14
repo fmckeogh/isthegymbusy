@@ -5,8 +5,9 @@ use {
     },
     futures::lock::Mutex,
     regex::Regex,
-    reqwest::Client,
+    reqwest::{Client, ClientBuilder},
     std::{
+        num::ParseIntError,
         sync::Arc,
         time::{Duration, Instant},
     },
@@ -21,10 +22,15 @@ pub struct StatusFetcher(Arc<Mutex<Inner>>);
 
 impl StatusFetcher {
     pub async fn new() -> Self {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .unwrap();
+
         let inner = Arc::new(Mutex::new(Inner {
             capacity: 0,
             last_fetch: Instant::now(),
-            client: Client::new(),
+            client,
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
             history: PersistentHistory::open(&config::get().history_path),
         }));
@@ -45,12 +51,12 @@ impl StatusFetcher {
 
 async fn fetcher_task(inner: Arc<Mutex<Inner>>) {
     loop {
-        inner.lock().await.update_status().await;
+        if let Err(e) = inner.lock().await.update_status().await {
+            error!("Error while updating status: {e:?}");
+        }
         sleep(Duration::from_secs(config::get().fetch_interval)).await;
     }
 }
-
-pub enum UpdateError {}
 
 pub struct Inner {
     capacity: u8,
@@ -60,41 +66,41 @@ pub struct Inner {
     history: PersistentHistory,
 }
 
+/// Error occurred while updating status
+#[derive(Debug, thiserror::Error, displaydoc::Display)]
+pub enum StatusUpdateError {
+    /// Error during GET request
+    Request(#[from] reqwest::Error),
+    /// Regex did not match response text {text}
+    MissingCaptures { text: String },
+    /// No capture group found at index {i} in text {text}
+    MissingCaptureGroup { text: String, i: usize },
+    /// Failed to parse {1:?} as u8: {0:?}
+    Parse(ParseIntError, String),
+}
+
 impl Inner {
-    async fn update_status(&mut self) {
+    async fn update_status(&mut self) -> Result<(), StatusUpdateError> {
         info!("Starting status fetch");
 
-        let res = match self
-            .client
-            .get(URL)
-            .timeout(Duration::from_secs(5))
-            .send()
-            .await
-        {
-            Ok(res) => res,
-            Err(e) => {
-                error!("GET request failed {e:?}");
-                return;
-            }
-        };
+        let text = self.client.get(URL).send().await?.text().await?;
 
-        let text = match res.text().await {
-            Ok(text) => text,
-            Err(e) => {
-                error!("response text failed {e:?}");
-                return;
-            }
-        };
+        let captures = self
+            .regex
+            .captures(&text)
+            .ok_or_else(|| StatusUpdateError::MissingCaptures { text: text.clone() })?;
 
-        let captures = match self.regex.captures(&text) {
-            Some(captures) => captures,
-            None => {
-                error!("regex failed, no captures");
-                return;
-            }
-        };
+        let percentage = captures
+            .get(1)
+            .ok_or_else(|| StatusUpdateError::MissingCaptureGroup {
+                text: text.clone(),
+                i: 1,
+            })?
+            .as_str();
 
-        self.capacity = captures.get(1).unwrap().as_str().parse().unwrap();
+        self.capacity = percentage
+            .parse()
+            .map_err(|e| StatusUpdateError::Parse(e, percentage.to_owned()))?;
 
         info!("Finished status fetch, got capacity: {}", self.capacity);
 
@@ -102,5 +108,7 @@ impl Inner {
 
         self.history
             .append(chrono::Utc::now().timestamp(), self.capacity);
+
+        Ok(())
     }
 }
