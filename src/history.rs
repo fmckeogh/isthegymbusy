@@ -41,13 +41,6 @@ struct RawEntry {
 
 impl RawEntry {
     pub fn upgrade_v0_to_v1(&mut self) {
-        if self.timestamp != 0 {
-            assert!(self.timestamp > 1675675411);
-            assert!(self.timestamp < 1678094611);
-        }
-
-        assert!(self.value < 120);
-
         self.version = 1;
         self.crc = calc_crc(self.timestamp, self.value);
         self.verify();
@@ -128,8 +121,16 @@ impl PersistentHistory {
             .filter(|entry| entry.timestamp != 0)
             .map(
                 |RawEntry {
-                     value, timestamp, ..
-                 }| { Entry { value, timestamp } },
+                     value,
+                     timestamp,
+                     crc,
+                     ..
+                 }| {
+                    assert_eq!(crc, calc_crc(timestamp, value));
+                    {
+                        Entry { value, timestamp }
+                    }
+                },
             )
             .collect::<Vec<_>>();
 
