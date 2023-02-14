@@ -51,7 +51,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
         }
 
         let mean = if bucket.len() == 0 {
-            0
+            0xFF
         } else {
             u8::try_from(bucket.iter().sum::<u16>() / u16::try_from(bucket.len()).unwrap()).unwrap()
         };
