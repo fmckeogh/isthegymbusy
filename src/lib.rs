@@ -22,11 +22,11 @@ pub mod status;
 
 pub use crate::config::Config;
 
-/// status.bin cached for quarter of the fetch interval
-const STATUS_MAX_AGE_DIVISOR: u64 = 4;
+/// status.bin cached for half of the fetch interval
+const STATUS_MAX_AGE_DIVISOR: u64 = 2;
 
-/// history.bin cached for 5 minutes
-const HISTORY_MAX_AGE: u64 = 5 * 60;
+/// history.bin cached for 15 minutes
+const HISTORY_MAX_AGE: u64 = 15 * 60;
 
 /// Static files cached for 15 minutes
 const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
