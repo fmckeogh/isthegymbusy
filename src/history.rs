@@ -2,6 +2,7 @@
 
 use {
     bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable},
+    crc::{Crc, CRC_32_CKSUM},
     memmap2::MmapMut,
     std::{cmp::Ordering, fs, mem::size_of, path::Path},
     tracing::{info, warn},
@@ -32,10 +33,32 @@ pub struct Entry {
 #[derive(Debug, Clone, Copy, PartialEq, Pod, Zeroable)]
 struct RawEntry {
     value: u8,
-    _pad0: u8,
+    version: u8,
     _pad1: u16,
-    _pad2: u32,
-    timestamp: i64,
+    crc: u32,
+    timestamp: i64, // 0 timestamp means entry is "empty"
+}
+
+impl RawEntry {
+    pub fn upgrade_v0_to_v1(&mut self) {
+        if self.timestamp != 0 {
+            assert!(self.timestamp > 1675675411);
+            assert!(self.timestamp < 1678094611);
+        }
+
+        assert!(self.value < 120);
+
+        self.version = 1;
+        self.crc = calc_crc(self.timestamp, self.value);
+        self.verify();
+    }
+
+    pub fn verify(&self) {
+        assert_eq!(self.crc, calc_crc(self.timestamp, self.value));
+
+        // check timestamp is reasonable
+        // check value is reasonable
+    }
 }
 
 pub struct PersistentHistory {
@@ -59,7 +82,7 @@ impl PersistentHistory {
                 warn!("history file size ({current_len} bytes) less than FILE_SIZE ({FILE_SIZE} bytes), expanding...");
                 file.set_len(FILE_SIZE).unwrap();
             }
-            Ordering::Equal => (),
+            Ordering::Equal => info!("file size {current_len} bytes"),
             Ordering::Greater => {
                 panic!("history file size ({current_len} bytes) greater than FILE_SIZE ({FILE_SIZE} bytes)");
             }
@@ -67,14 +90,35 @@ impl PersistentHistory {
 
         let mmap = unsafe { MmapMut::map_mut(&file) }.unwrap();
 
-        let celf = Self { mmap };
+        let mut celf = Self { mmap };
 
-        info!(
-            "file size {current_len} bytes, {}/{NUM_ENTRIES} entries occupied",
-            celf.get().len()
-        );
+        celf.verify();
 
         celf
+    }
+
+    fn verify(&mut self) {
+        let mut upgraded = 0;
+        let mut verified = 0;
+
+        self.mmap[HEADER_SIZE..]
+            .chunks_exact_mut(RAW_ENTRY_SIZE)
+            .map(from_bytes_mut::<RawEntry>)
+            .for_each(|entry| match entry.version {
+                0 => {
+                    entry.upgrade_v0_to_v1();
+                    upgraded += 1;
+                }
+                1 => {
+                    entry.verify();
+                    verified += 1;
+                }
+                v => panic!("unexpected entry version {v} in entry {entry:?}"),
+            });
+
+        info!("{}/{NUM_ENTRIES} entries upgraded", upgraded);
+        info!("{}/{NUM_ENTRIES} entries verified", verified);
+        info!("{}/{NUM_ENTRIES} entries occupied", self.get().len());
     }
 
     pub fn get(&self) -> Vec<Entry> {
@@ -85,7 +129,7 @@ impl PersistentHistory {
             .map(
                 |RawEntry {
                      value, timestamp, ..
-                 }| Entry { value, timestamp },
+                 }| { Entry { value, timestamp } },
             )
             .collect::<Vec<_>>();
 
@@ -103,8 +147,13 @@ impl PersistentHistory {
             let raw_entry =
                 from_bytes_mut::<RawEntry>(&mut self.mmap[start..start + RAW_ENTRY_SIZE]);
 
-            raw_entry.timestamp = timestamp;
-            raw_entry.value = value;
+            *raw_entry = RawEntry {
+                value,
+                version: 1,
+                _pad1: 0,
+                crc: calc_crc(timestamp, value),
+                timestamp,
+            };
 
             #[cfg(not(test))]
             self.mmap.flush_range(start, RAW_ENTRY_SIZE).unwrap();
@@ -119,6 +168,15 @@ impl PersistentHistory {
             self.mmap.flush_range(0, HEADER_SIZE).unwrap();
         }
     }
+}
+
+fn calc_crc(timestamp: i64, value: u8) -> u32 {
+    const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_CKSUM);
+
+    let mut digest = CRC.digest();
+    digest.update(bytemuck::bytes_of(&timestamp));
+    digest.update(&[value]);
+    digest.finalize()
 }
 
 #[cfg(test)]

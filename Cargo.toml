@@ -30,6 +30,7 @@ bytemuck = { version = "1.13.0", features = ["derive"] }
 include_dir = "0.7.3"
 mime_guess = "2.0.4"
 chrono = "0.4.23"
+crc = "3.0.1"
 
 [dev-dependencies]
 rand = "0.8.5"
