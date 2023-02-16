@@ -11,7 +11,7 @@ use {
         sync::Arc,
         time::{Duration, Instant},
     },
-    tokio::time::sleep,
+    tokio::time::interval,
     tracing::{error, info},
 };
 
@@ -24,6 +24,7 @@ impl StatusFetcher {
     pub async fn new() -> Self {
         let client = ClientBuilder::new()
             .timeout(Duration::from_secs(5))
+            .connect_timeout(Duration::from_secs(5))
             .build()
             .unwrap();
 
@@ -50,11 +51,12 @@ impl StatusFetcher {
 }
 
 async fn fetcher_task(inner: Arc<Mutex<Inner>>) {
+    let mut interval = interval(Duration::from_secs(config::get().fetch_interval));
     loop {
+        interval.tick().await;
         if let Err(e) = inner.lock().await.update_status().await {
             error!("Error while updating status: {e:?}");
         }
-        sleep(Duration::from_secs(config::get().fetch_interval)).await;
     }
 }
 
