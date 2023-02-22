@@ -10,6 +10,7 @@ use {
     tokio::task::JoinHandle,
     tower_http::compression::CompressionLayer,
     tracing::info,
+    tracing_appender::non_blocking::WorkerGuard,
 };
 
 pub mod config;
@@ -34,8 +35,7 @@ const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
-    #[cfg(not(test))]
-    crate::log::tracing_init()?;
+    let _guard = crate::log::tracing_init(&config.log_path)?;
 
     config::init(config.clone()).await;
 
@@ -66,7 +66,11 @@ pub async fn start(config: &Config) -> Result<Handle> {
     info!("contractor started on http://{}", address);
 
     // return handles
-    Ok(Handle { address, handle })
+    Ok(Handle {
+        address,
+        handle,
+        _guard,
+    })
 }
 
 /// Handle for running an instance
@@ -75,6 +79,8 @@ pub struct Handle {
     address: SocketAddr,
     // JoinHandle for server task
     handle: JoinHandle<Result<()>>,
+    // Guard for log file tracing
+    _guard: WorkerGuard,
 }
 
 impl Handle {

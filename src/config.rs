@@ -29,6 +29,9 @@ pub struct Config {
 
     /// Path to history file
     pub history_path: String,
+
+    /// Path to logfile directory
+    pub log_path: String,
 }
 
 impl Config {

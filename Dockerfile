@@ -22,7 +22,10 @@ RUN cargo test
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 FROM scratch
-ENV RUST_LOG=
 ENV ADDRESS=
+ENV FETCH_INTERVAL=
+ENV HISTORY_PATH=
+ENV LOG_PATH=
+ENV RUST_LOG=
 COPY --from=builder /tmp/isthegymbusy/target/x86_64-unknown-linux-musl/release/isthegymbusy .
 ENTRYPOINT ["./isthegymbusy"]

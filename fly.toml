@@ -9,6 +9,7 @@ processes = []
   ADDRESS = "0.0.0.0:8080"
   FETCH_INTERVAL = "60"
   HISTORY_PATH = "/data/history"
+  LOG_PATH = "/data/logs/"
   RUST_LOG = "info,tower_http::trace::on_request=warn"
 
 [experimental]

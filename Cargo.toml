@@ -9,7 +9,7 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-axum = "0.6.6"
+axum = "0.6.7"
 color-eyre = "0.6.2"
 config = "0.13.3"
 dotenv = "0.15.0"
@@ -17,6 +17,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 tokio = { version = "1.25.0", features = ["full"] }
 tracing = { version = "0.1.37" }
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing-appender = "0.2.2"
 tower-http = { version = "0.3.5", features = ["trace", "compression-br", "compression-gzip", "compression-deflate"] }
 displaydoc = "0.2.3"
 thiserror = "1.0.38"
@@ -25,7 +26,7 @@ reqwest = { version = "0.11.14", default-features = false, features = ["rustls-t
 futures = "0.3.26"
 regex = "1.7.1"
 async-once-cell = "0.4.3"
-memmap2 = "0.5.8"
+memmap2 = "0.5.9"
 bytemuck = { version = "1.13.0", features = ["derive"] }
 include_dir = "0.7.3"
 mime_guess = "2.0.4"
