@@ -21,7 +21,7 @@ RUN touch src/main.rs
 RUN cargo test
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-FROM scratch
+FROM alpine
 ENV ADDRESS=
 ENV FETCH_INTERVAL=
 ENV HISTORY_PATH=
