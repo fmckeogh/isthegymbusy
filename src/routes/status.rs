@@ -1,5 +1,5 @@
 use {
-    crate::{config, StatusFetcher, STATUS_MAX_AGE_DIVISOR},
+    crate::{config, AppState, STATUS_MAX_AGE_DIVISOR},
     axum::{
         extract::State,
         http::{
@@ -8,12 +8,11 @@ use {
         },
         response::IntoResponse,
     },
+    std::sync::atomic::Ordering::Relaxed,
 };
 
 /// Gets current gym occupancy
-pub async fn status(State(status): State<StatusFetcher>) -> impl IntoResponse {
-    let capacity = status.capacity().await;
-
+pub async fn status(State(AppState { capacity, .. }): State<AppState>) -> impl IntoResponse {
     let mut headers = HeaderMap::new();
     headers.insert(
         CONTENT_TYPE,
@@ -28,5 +27,5 @@ pub async fn status(State(status): State<StatusFetcher>) -> impl IntoResponse {
         .unwrap(),
     );
 
-    (headers, [capacity])
+    (headers, [capacity.load(Relaxed)])
 }

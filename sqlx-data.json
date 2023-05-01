@@ -1,0 +1,52 @@
+{
+  "db": "PostgreSQL",
+  "36f535516726fcd041ce9ff21a761cffa4504f40fcdda6036e7b8b111d3bf1c2": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Timestamptz",
+          "Int2"
+        ]
+      }
+    },
+    "query": "INSERT INTO measurements VALUES ($1, $2)"
+  },
+  "ac1de68a1de101ca6e34399bb886f55d5d43b4f7f8b697c2e49009dc1afbbf38": {
+    "describe": {
+      "columns": [
+        {
+          "name": "measured_at",
+          "ordinal": 0,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "value",
+          "ordinal": 1,
+          "type_info": "Int2"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM measurements ORDER BY measured_at DESC"
+  },
+  "bdda7a501abe17af63ae4a97ad41f3c35f4bfd5b3178708644975f20b4b6d700": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int2"
+        ]
+      }
+    },
+    "query": "INSERT INTO measurements (value) VALUES ($1)"
+  }
+}

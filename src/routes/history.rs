@@ -1,5 +1,5 @@
 use {
-    crate::{history::Entry, status::StatusFetcher, HISTORY_MAX_AGE},
+    crate::{history::Entry, AppState, HISTORY_MAX_AGE},
     axum::{
         extract::State,
         http::{
@@ -8,7 +8,7 @@ use {
         },
         response::IntoResponse,
     },
-    chrono::Utc,
+    chrono::{DateTime, Utc},
 };
 
 /// Number of seconds in a 5 minute interval
@@ -20,13 +20,33 @@ const DAY_SECONDS: u64 = 24 * 60 * 60;
 /// Number of intervals in two days
 const NUM_INTERVALS: u64 = (2 * DAY_SECONDS) / INTERVAL;
 
-pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
+pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoResponse {
     let start_timestamp = Utc::now().timestamp();
 
     let mut body = Vec::with_capacity(NUM_INTERVALS as usize);
 
-    let history = status.history().await;
-    let mut history_rev = history.iter().rev().peekable();
+    let history = {
+        struct DbEntry {
+            measured_at: DateTime<Utc>,
+            value: i16,
+        }
+
+        sqlx::query_as!(
+            DbEntry,
+            "SELECT * FROM measurements ORDER BY measured_at DESC"
+        )
+        .fetch_all(&db)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|DbEntry { measured_at, value }| Entry {
+            timestamp: measured_at.timestamp(),
+            value: value.try_into().unwrap(),
+        })
+        .collect::<Vec<_>>()
+    };
+
+    let mut history_iter = history.iter().peekable();
 
     //
     for bucket_idx in 1..=NUM_INTERVALS {
@@ -35,7 +55,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
         let mut bucket = vec![];
 
         loop {
-            if history_rev
+            if history_iter
                 .peek()
                 .unwrap_or(&&Entry {
                     timestamp: 0,
@@ -44,7 +64,7 @@ pub async fn history(State(status): State<StatusFetcher>) -> impl IntoResponse {
                 .timestamp
                 > end
             {
-                bucket.push(history_rev.next().unwrap().value as u16);
+                bucket.push(history_iter.next().unwrap().value as u16);
             } else {
                 break;
             }

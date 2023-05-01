@@ -1,15 +1,15 @@
 use {
-    crate::{
-        config,
-        history::{Entry, PersistentHistory},
-    },
-    futures::lock::Mutex,
+    crate::config,
     regex::Regex,
     reqwest::{Client, ClientBuilder},
+    sqlx::{Pool, Postgres},
     std::{
         num::ParseIntError,
-        sync::Arc,
-        time::{Duration, Instant},
+        sync::{
+            atomic::{AtomicU8, Ordering::Relaxed},
+            Arc,
+        },
+        time::Duration,
     },
     tokio::time::interval,
     tracing::{error, info},
@@ -18,70 +18,35 @@ use {
 const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
 
 #[derive(Clone)]
-pub struct StatusFetcher(Arc<Mutex<Inner>>);
+pub struct StatusFetcher {
+    capacity: Arc<AtomicU8>,
+    db: Pool<Postgres>,
+    client: Client,
+    regex: Regex,
+}
 
 impl StatusFetcher {
-    pub async fn new() -> Self {
+    pub async fn init(db: Pool<Postgres>) -> Arc<AtomicU8> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_secs(5))
             .connect_timeout(Duration::from_secs(5))
             .build()
             .unwrap();
 
-        let inner = Arc::new(Mutex::new(Inner {
-            capacity: 0,
-            last_fetch: Instant::now(),
+        let capacity = Arc::new(AtomicU8::new(0));
+
+        let celf = Self {
+            capacity: capacity.clone(),
+            db,
             client,
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
-            history: PersistentHistory::open(&config::get().history_path),
-        }));
+        };
 
-        tokio::spawn(fetcher_task(inner.clone()));
+        tokio::spawn(fetcher_task(celf));
 
-        Self(inner)
+        capacity
     }
 
-    pub async fn capacity(&self) -> u8 {
-        self.0.lock().await.capacity
-    }
-
-    pub async fn history(&self) -> Vec<Entry> {
-        self.0.lock().await.history.get()
-    }
-}
-
-async fn fetcher_task(inner: Arc<Mutex<Inner>>) {
-    let mut interval = interval(Duration::from_secs(config::get().fetch_interval));
-    loop {
-        interval.tick().await;
-        if let Err(e) = inner.lock().await.update_status().await {
-            error!("Error while updating status: {e:?}");
-        }
-    }
-}
-
-pub struct Inner {
-    capacity: u8,
-    last_fetch: Instant,
-    client: Client,
-    regex: Regex,
-    history: PersistentHistory,
-}
-
-/// Error occurred while updating status
-#[derive(Debug, thiserror::Error, displaydoc::Display)]
-pub enum StatusUpdateError {
-    /// Error during GET request
-    Request(#[from] reqwest::Error),
-    /// Regex did not match response text {text}
-    MissingCaptures { text: String },
-    /// No capture group found at index {i} in text {text}
-    MissingCaptureGroup { text: String, i: usize },
-    /// Failed to parse {1:?} as u8: {0:?}
-    Parse(ParseIntError, String),
-}
-
-impl Inner {
     async fn update_status(&mut self) -> Result<(), StatusUpdateError> {
         info!("Starting status fetch");
 
@@ -100,17 +65,45 @@ impl Inner {
             })?
             .as_str();
 
-        self.capacity = percentage
+        let capacity = percentage
             .parse()
             .map_err(|e| StatusUpdateError::Parse(e, percentage.to_owned()))?;
 
-        info!("Finished status fetch, got capacity: {}", self.capacity);
+        self.capacity.store(capacity, Relaxed);
 
-        self.last_fetch = Instant::now();
+        info!("Finished status fetch, got capacity: {}", capacity);
 
-        self.history
-            .append(chrono::Utc::now().timestamp(), self.capacity);
+        sqlx::query!(
+            "INSERT INTO measurements (value) VALUES ($1)",
+            i16::from(capacity),
+        )
+        .execute(&self.db)
+        .await
+        .unwrap();
 
         Ok(())
     }
+}
+
+async fn fetcher_task(mut fetcher: StatusFetcher) {
+    let mut interval = interval(Duration::from_secs(config::get().fetch_interval));
+    loop {
+        interval.tick().await;
+        if let Err(e) = fetcher.update_status().await {
+            error!("Error while updating status: {e:?}");
+        }
+    }
+}
+
+/// Error occurred while updating status
+#[derive(Debug, thiserror::Error, displaydoc::Display)]
+pub enum StatusUpdateError {
+    /// Error during GET request
+    Request(#[from] reqwest::Error),
+    /// Regex did not match response text {text}
+    MissingCaptures { text: String },
+    /// No capture group found at index {i} in text {text}
+    MissingCaptureGroup { text: String, i: usize },
+    /// Failed to parse {1:?} as u8: {0:?}
+    Parse(ParseIntError, String),
 }

@@ -27,8 +27,8 @@ pub struct Config {
     /// Number of seconds between fetching status
     pub fetch_interval: u64,
 
-    /// Path to history file
-    pub history_path: String,
+    /// Postgres URL
+    pub database_url: String,
 
     /// Path to logfile directory
     pub log_path: String,

@@ -7,24 +7,24 @@ RUN rustup target add x86_64-unknown-linux-musl
 # add musl tools
 RUN apt-get update && apt-get install musl-tools clang llvm -y
 
-# build dependencies
+# fetch registry
 RUN cargo init --bin .
+RUN cargo build
+
+# build dependencies
 COPY Cargo.lock .
 COPY Cargo.toml .
-RUN cargo build --tests
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# test and build app
-COPY src src
-COPY static static
+# build app
+COPY . .
 RUN touch src/main.rs
-RUN cargo test
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-FROM alpine
+FROM scratch
 ENV ADDRESS=
 ENV FETCH_INTERVAL=
-ENV HISTORY_PATH=
+ENV DATABASE_URL=
 ENV LOG_PATH=
 ENV RUST_LOG=
 COPY --from=builder /tmp/isthegymbusy/target/x86_64-unknown-linux-musl/release/isthegymbusy .

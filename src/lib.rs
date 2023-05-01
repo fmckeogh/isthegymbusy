@@ -6,10 +6,18 @@ use {
     },
     axum::{routing::get, Router},
     color_eyre::eyre::Result,
-    std::net::SocketAddr,
+    sqlx::{
+        postgres::{PgPoolOptions, Postgres},
+        Pool,
+    },
+    std::{
+        net::SocketAddr,
+        sync::{atomic::AtomicU8, Arc},
+        time::Duration,
+    },
     tokio::task::JoinHandle,
     tower_http::compression::CompressionLayer,
-    tracing::info,
+    tracing::{debug, info},
     tracing_appender::non_blocking::WorkerGuard,
 };
 
@@ -32,6 +40,12 @@ const HISTORY_MAX_AGE: u64 = 15 * 60;
 /// Static files cached for 15 minutes
 const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
 
+#[derive(Clone)]
+pub struct AppState {
+    capacity: Arc<AtomicU8>,
+    db: Pool<Postgres>,
+}
+
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
@@ -39,7 +53,16 @@ pub async fn start(config: &Config) -> Result<Handle> {
 
     config::init(config.clone()).await;
 
-    let status_fetcher = StatusFetcher::new().await;
+    let db = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(&config.database_url)
+        .await
+        .unwrap();
+
+    debug!("running migrations");
+    sqlx::migrate!().run(&db).await?;
+
+    let capacity = StatusFetcher::init(db.clone()).await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -50,7 +73,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .route("/history.bin", get(history))
         .route("/status.bin", get(status))
         .fallback(static_files)
-        .with_state(status_fetcher)
+        .with_state(AppState { capacity, db })
         .layer(compression)
         .layer(create_trace_layer());
 
