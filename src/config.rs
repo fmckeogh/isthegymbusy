@@ -29,9 +29,6 @@ pub struct Config {
 
     /// Postgres URL
     pub database_url: String,
-
-    /// Path to logfile directory
-    pub log_path: String,
 }
 
 impl Config {

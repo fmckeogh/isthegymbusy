@@ -1,6 +1,6 @@
 use {
     crate::{
-        log::create_trace_layer,
+        log::{create_trace_layer, tracing_init},
         routes::{health, history, index, static_files, status},
         status::StatusFetcher,
     },
@@ -18,7 +18,6 @@ use {
     tokio::task::JoinHandle,
     tower_http::compression::CompressionLayer,
     tracing::{debug, info},
-    tracing_appender::non_blocking::WorkerGuard,
 };
 
 pub mod config;
@@ -48,7 +47,7 @@ pub struct AppState {
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
-    let _guard = crate::log::tracing_init(&config.log_path)?;
+    tracing_init()?;
 
     config::init(config.clone()).await;
 
@@ -88,11 +87,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     info!("contractor started on http://{}", address);
 
     // return handles
-    Ok(Handle {
-        address,
-        handle,
-        _guard,
-    })
+    Ok(Handle { address, handle })
 }
 
 /// Handle for running an instance
@@ -101,8 +96,6 @@ pub struct Handle {
     address: SocketAddr,
     // JoinHandle for server task
     handle: JoinHandle<Result<()>>,
-    // Guard for log file tracing
-    _guard: WorkerGuard,
 }
 
 impl Handle {
