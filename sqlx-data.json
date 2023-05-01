@@ -1,6 +1,6 @@
 {
   "db": "PostgreSQL",
-  "ac1de68a1de101ca6e34399bb886f55d5d43b4f7f8b697c2e49009dc1afbbf38": {
+  "111b1421280a566b55f40be836b48b17c94be56cd3d00ed15da51ac36ac4df3e": {
     "describe": {
       "columns": [
         {
@@ -22,7 +22,7 @@
         "Left": []
       }
     },
-    "query": "SELECT * FROM measurements ORDER BY measured_at DESC"
+    "query": "SELECT * FROM measurements\n            WHERE measured_at >= NOW() - INTERVAL '48 HOURS'\n            ORDER BY measured_at DESC"
   },
   "bdda7a501abe17af63ae4a97ad41f3c35f4bfd5b3178708644975f20b4b6d700": {
     "describe": {

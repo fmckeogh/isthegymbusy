@@ -39,7 +39,9 @@ pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
 
         sqlx::query_as!(
             DbEntry,
-            "SELECT * FROM measurements ORDER BY measured_at DESC"
+            "SELECT * FROM measurements
+            WHERE measured_at >= NOW() - INTERVAL '48 HOURS'
+            ORDER BY measured_at DESC"
         )
         .fetch_all(&db)
         .await
