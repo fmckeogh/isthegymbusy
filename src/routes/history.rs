@@ -1,5 +1,5 @@
 use {
-    crate::{history::Entry, AppState, HISTORY_MAX_AGE},
+    crate::{AppState, HISTORY_MAX_AGE},
     axum::{
         extract::State,
         http::{
@@ -19,6 +19,12 @@ const DAY_SECONDS: u64 = 24 * 60 * 60;
 
 /// Number of intervals in two days
 const NUM_INTERVALS: u64 = (2 * DAY_SECONDS) / INTERVAL;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Entry {
+    pub value: u8,
+    pub timestamp: i64,
+}
 
 pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoResponse {
     let start_timestamp = Utc::now().timestamp();
