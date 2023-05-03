@@ -1,5 +1,4 @@
 use {
-    crate::config,
     regex::Regex,
     reqwest::{Client, ClientBuilder},
     sqlx::{Pool, Postgres},
@@ -26,7 +25,7 @@ pub struct StatusFetcher {
 }
 
 impl StatusFetcher {
-    pub async fn init(db: Pool<Postgres>) -> Arc<AtomicU8> {
+    pub async fn init(db: Pool<Postgres>, period: Duration) -> Arc<AtomicU8> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_secs(5))
             .connect_timeout(Duration::from_secs(5))
@@ -42,7 +41,7 @@ impl StatusFetcher {
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
         };
 
-        tokio::spawn(fetcher_task(celf));
+        tokio::spawn(fetcher_task(celf, period));
 
         capacity
     }
@@ -85,8 +84,8 @@ impl StatusFetcher {
     }
 }
 
-async fn fetcher_task(mut fetcher: StatusFetcher) {
-    let mut interval = interval(Duration::from_secs(config::get().fetch_interval));
+async fn fetcher_task(mut fetcher: StatusFetcher, period: Duration) {
+    let mut interval = interval(period);
     loop {
         interval.tick().await;
         if let Err(e) = fetcher.update_status().await {

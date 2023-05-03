@@ -1,22 +1,11 @@
 //! App configuration
 
 use {
-    async_once_cell::OnceCell,
     color_eyre::eyre::{Result, WrapErr},
     config::Environment,
     serde::Deserialize,
     std::net::SocketAddr,
 };
-
-static CONFIG: OnceCell<Config> = OnceCell::new();
-
-pub async fn init(config: Config) {
-    CONFIG.get_or_init(async { config }).await;
-}
-
-pub fn get() -> &'static Config {
-    CONFIG.get().unwrap()
-}
 
 /// Contractor configuration parameters
 #[derive(Clone, Debug, Deserialize)]

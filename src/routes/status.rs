@@ -1,5 +1,5 @@
 use {
-    crate::{config, AppState, STATUS_MAX_AGE_DIVISOR},
+    crate::{AppState, STATUS_MAX_AGE_DIVISOR},
     axum::{
         extract::State,
         http::{
@@ -12,7 +12,11 @@ use {
 };
 
 /// Gets current gym occupancy
-pub async fn status(State(AppState { capacity, .. }): State<AppState>) -> impl IntoResponse {
+pub async fn status(
+    State(AppState {
+        capacity, config, ..
+    }): State<AppState>,
+) -> impl IntoResponse {
     let mut headers = HeaderMap::new();
     headers.insert(
         CONTENT_TYPE,
@@ -22,7 +26,7 @@ pub async fn status(State(AppState { capacity, .. }): State<AppState>) -> impl I
         CACHE_CONTROL,
         HeaderValue::from_str(&format!(
             "public, max-age={}, immutable",
-            config::get().fetch_interval / STATUS_MAX_AGE_DIVISOR
+            config.fetch_interval / STATUS_MAX_AGE_DIVISOR
         ))
         .unwrap(),
     );

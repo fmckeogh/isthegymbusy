@@ -42,14 +42,13 @@ const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
 pub struct AppState {
     capacity: Arc<AtomicU8>,
     db: Pool<Postgres>,
+    config: Config,
 }
 
 /// Starts a new instance of the contractor returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
     tracing_init()?;
-
-    config::init(config.clone()).await;
 
     let db = PgPoolOptions::new()
         .acquire_timeout(Duration::from_secs(5))
@@ -60,7 +59,8 @@ pub async fn start(config: &Config) -> Result<Handle> {
     debug!("running migrations");
     sqlx::migrate!().run(&db).await?;
 
-    let capacity = StatusFetcher::init(db.clone()).await;
+    let capacity =
+        StatusFetcher::init(db.clone(), Duration::from_secs(config.fetch_interval)).await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -71,12 +71,16 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .route("/history.bin", get(history))
         .route("/status.bin", get(status))
         .fallback(static_files)
-        .with_state(AppState { capacity, db })
+        .with_state(AppState {
+            capacity,
+            db,
+            config: config.clone(),
+        })
         .layer(compression)
         .layer(create_trace_layer());
 
     // bind axum server to socket address and use router to create a service factory
-    let server = axum::Server::bind(&config::get().address).serve(router.into_make_service());
+    let server = axum::Server::bind(&config.address).serve(router.into_make_service());
 
     // get address server is bound to (may be different to address passed to Server::bind)
     let address = server.local_addr();
