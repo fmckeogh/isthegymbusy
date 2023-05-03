@@ -24,11 +24,11 @@ window.onload = async (_event) => {
     .then((response) => {
       return Promise.all([
         response.arrayBuffer(),
-        parseInt(response.headers.get("history-end")),
+        parseInt(response.headers.get("history-latest")),
         parseInt(response.headers.get("history-interval")),
       ]);
     })
-    .then(([array, end_timestamp, interval]) => {
+    .then(([array, latest_timestamp, interval]) => {
       var view = new DataView(array);
 
       var entries = [];
@@ -37,7 +37,7 @@ window.onload = async (_event) => {
         let value = view.getUint8(i);
 
         entries.push({
-          x: (end_timestamp - i * interval) * 1000,
+          x: (latest_timestamp - i * interval) * 1000,
           y: value == 0xff ? null : value,
         });
       }

@@ -9,16 +9,15 @@ use {
         response::IntoResponse,
     },
     chrono::{DateTime, Utc},
+    sqlx::postgres::types::PgInterval,
+    std::time::Duration,
 };
 
-/// Number of seconds in a 5 minute interval
-const INTERVAL: u64 = 60 * 5;
+/// Window in which to retrieve measurements from
+const QUERY_WINDOW: Duration = Duration::from_secs(60 * 60 * 24 * 2);
 
-/// Number of seconds in a day
-const DAY_SECONDS: u64 = 24 * 60 * 60;
-
-/// Number of intervals in two days
-const NUM_INTERVALS: u64 = (2 * DAY_SECONDS) / INTERVAL;
+/// Size of time intervals in which to group and average measurements in
+const INTERVAL: Duration = Duration::from_secs(5 * 60);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Entry {
@@ -27,67 +26,48 @@ pub struct Entry {
 }
 
 pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoResponse {
-    let start_timestamp = Utc::now().timestamp();
-
-    let mut body = Vec::with_capacity(NUM_INTERVALS as usize);
-
-    let history = {
-        struct DbEntry {
-            measured_at: DateTime<Utc>,
-            value: i16,
-        }
-
-        sqlx::query_as!(
-            DbEntry,
-            "SELECT * FROM measurements
-            WHERE measured_at >= NOW() - INTERVAL '48 HOURS'
-            ORDER BY measured_at DESC"
-        )
-        .fetch_all(&db)
-        .await
-        .unwrap()
-        .into_iter()
-        .map(|DbEntry { measured_at, value }| Entry {
-            timestamp: measured_at.timestamp(),
-            value: value.try_into().unwrap(),
-        })
-        .collect::<Vec<_>>()
-    };
-
-    let mut history_iter = history.iter().peekable();
-
-    //
-    for bucket_idx in 1..=NUM_INTERVALS {
-        let end = start_timestamp - i64::try_from(bucket_idx * INTERVAL).unwrap();
-
-        let mut bucket = vec![];
-
-        loop {
-            if history_iter
-                .peek()
-                .unwrap_or(&&Entry {
-                    timestamp: 0,
-                    value: 0,
-                })
-                .timestamp
-                > end
-            {
-                bucket.push(history_iter.next().unwrap().value as u16);
-            } else {
-                break;
-            }
-        }
-
-        let mean = if bucket.len() == 0 {
-            0xFF
-        } else {
-            u8::try_from(bucket.iter().sum::<u16>() / u16::try_from(bucket.len()).unwrap()).unwrap()
-        };
-
-        body.push(mean)
+    struct DbEntry {
+        measured_at: DateTime<Utc>,
+        value: i16,
     }
 
-    assert!(body.len() == NUM_INTERVALS as usize);
+    let history = sqlx::query_as!(
+        DbEntry,
+        r#"
+            SELECT
+                intervals.int_start as "measured_at!",
+                CASE
+                    WHEN COUNT(measurements.value) > 0 THEN AVG(measurements.value)::smallint
+                    ELSE 255::smallint
+                END as "value!"
+            FROM (
+                SELECT
+                    generate_series(
+                        date_trunc('minute', NOW() - $1::interval),
+                        NOW(),
+                        $2::interval
+                    ) as int_start
+            ) as intervals
+            LEFT JOIN measurements ON (
+                measurements.measured_at >= intervals.int_start AND
+                measurements.measured_at < intervals.int_start + $2::interval
+            )
+            GROUP BY intervals.int_start
+            ORDER BY intervals.int_start DESC;
+        "#,
+        PgInterval::try_from(QUERY_WINDOW).unwrap(),
+        PgInterval::try_from(INTERVAL).unwrap()
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+
+    let latest_timestamp = history.first().unwrap().measured_at.timestamp().to_string();
+
+    let body = history
+        .into_iter()
+        .map(|DbEntry { value, .. }| value.try_into().unwrap())
+        .collect::<Vec<u8>>();
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -100,12 +80,12 @@ pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
     );
 
     headers.insert(
-        "history-end",
-        HeaderValue::from_str(&start_timestamp.to_string()).unwrap(),
+        "history-latest",
+        HeaderValue::from_str(&latest_timestamp).unwrap(),
     );
     headers.insert(
         "history-interval",
-        HeaderValue::from_str(&INTERVAL.to_string()).unwrap(),
+        HeaderValue::from_str(&INTERVAL.as_secs().to_string()).unwrap(),
     );
 
     (headers, body)
