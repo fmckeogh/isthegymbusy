@@ -10,7 +10,7 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-axum = "0.6.18"
+axum = { version = "0.6.18", features = ["headers"] }
 tokio = { version = "1.28.0", features = ["full"] }
 tower-http = { version = "0.4.0", features = ["trace", "compression-br", "compression-gzip", "compression-deflate"] }
 

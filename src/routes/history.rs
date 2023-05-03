@@ -2,15 +2,15 @@ use {
     crate::{AppState, HISTORY_MAX_AGE},
     axum::{
         extract::State,
-        http::{
-            header::{CACHE_CONTROL, CONTENT_TYPE},
-            HeaderMap, HeaderValue,
-        },
+        headers::{self, CacheControl, ContentType, Header},
+        http::{HeaderName, HeaderValue},
         response::IntoResponse,
+        TypedHeader,
     },
     chrono::{DateTime, Utc},
+    mime_guess::mime::APPLICATION_OCTET_STREAM,
     sqlx::postgres::types::PgInterval,
-    std::time::Duration,
+    std::{iter::once, time::Duration},
 };
 
 /// Window in which to retrieve measurements from
@@ -62,31 +62,66 @@ pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
     .await
     .unwrap();
 
-    let latest_timestamp = history.first().unwrap().measured_at.timestamp().to_string();
+    let latest_timestamp = history.first().unwrap().measured_at;
 
     let body = history
         .into_iter()
         .map(|DbEntry { value, .. }| value.try_into().unwrap())
         .collect::<Vec<u8>>();
 
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_static("application/octet-stream"),
-    );
-    headers.insert(
-        CACHE_CONTROL,
-        HeaderValue::from_str(&format!("public, max-age={HISTORY_MAX_AGE}, immutable")).unwrap(),
-    );
+    (
+        TypedHeader(ContentType::from(APPLICATION_OCTET_STREAM)),
+        TypedHeader(
+            CacheControl::new()
+                .with_max_age(HISTORY_MAX_AGE)
+                .with_public(),
+        ),
+        TypedHeader(HistoryLatest(latest_timestamp)),
+        TypedHeader(HistoryInterval(INTERVAL)),
+        body,
+    )
+}
 
-    headers.insert(
-        "history-latest",
-        HeaderValue::from_str(&latest_timestamp).unwrap(),
-    );
-    headers.insert(
-        "history-interval",
-        HeaderValue::from_str(&INTERVAL.as_secs().to_string()).unwrap(),
-    );
+struct HistoryLatest(DateTime<Utc>);
 
-    (headers, body)
+impl Header for HistoryLatest {
+    fn name() -> &'static HeaderName {
+        static NAME: HeaderName = HeaderName::from_static("history-latest");
+        &NAME
+    }
+
+    fn decode<'i, I>(_: &mut I) -> Result<Self, headers::Error>
+    where
+        Self: Sized,
+        I: Iterator<Item = &'i HeaderValue>,
+    {
+        Err(headers::Error::invalid())
+    }
+
+    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+        let value = HeaderValue::from_str(&self.0.timestamp().to_string()).unwrap();
+        values.extend(once(value));
+    }
+}
+
+struct HistoryInterval(Duration);
+
+impl Header for HistoryInterval {
+    fn name() -> &'static HeaderName {
+        static NAME: HeaderName = HeaderName::from_static("history-interval");
+        &NAME
+    }
+
+    fn decode<'i, I>(_: &mut I) -> Result<Self, headers::Error>
+    where
+        Self: Sized,
+        I: Iterator<Item = &'i HeaderValue>,
+    {
+        Err(headers::Error::invalid())
+    }
+
+    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+        let value = HeaderValue::from_str(&self.0.as_secs().to_string()).unwrap();
+        values.extend(std::iter::once(value));
+    }
 }

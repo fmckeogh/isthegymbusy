@@ -1,11 +1,10 @@
 use {
     crate::STATIC_FILES_MAX_AGE,
     axum::{
-        http::{
-            header::{CACHE_CONTROL, CONTENT_TYPE},
-            HeaderMap, HeaderValue, StatusCode, Uri,
-        },
+        headers::{CacheControl, ContentType},
+        http::{StatusCode, Uri},
         response::{IntoResponse, Response},
+        TypedHeader,
     },
     include_dir::{include_dir, Dir},
 };
@@ -22,18 +21,14 @@ pub async fn static_files(uri: Uri) -> Response {
 
     let mime_type = mime_guess::from_path(path).first_or_text_plain();
 
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_str(mime_type.as_ref()).unwrap(),
-    );
-    headers.insert(
-        CACHE_CONTROL,
-        HeaderValue::from_str(&format!(
-            "public, max-age={STATIC_FILES_MAX_AGE}, immutable"
-        ))
-        .unwrap(),
-    );
-
-    (headers, file.contents()).into_response()
+    (
+        TypedHeader(ContentType::from(mime_type)),
+        TypedHeader(
+            CacheControl::new()
+                .with_max_age(STATIC_FILES_MAX_AGE)
+                .with_public(),
+        ),
+        file.contents(),
+    )
+        .into_response()
 }

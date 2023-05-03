@@ -2,13 +2,12 @@ use {
     crate::{AppState, STATUS_MAX_AGE_DIVISOR},
     axum::{
         extract::State,
-        http::{
-            header::{CACHE_CONTROL, CONTENT_TYPE},
-            HeaderMap, HeaderValue,
-        },
+        headers::{CacheControl, ContentType},
         response::IntoResponse,
+        TypedHeader,
     },
-    std::sync::atomic::Ordering::Relaxed,
+    mime_guess::mime::APPLICATION_OCTET_STREAM,
+    std::{sync::atomic::Ordering::Relaxed, time::Duration},
 };
 
 /// Gets current gym occupancy
@@ -17,19 +16,15 @@ pub async fn status(
         capacity, config, ..
     }): State<AppState>,
 ) -> impl IntoResponse {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        CONTENT_TYPE,
-        HeaderValue::from_static("application/octet-stream"),
-    );
-    headers.insert(
-        CACHE_CONTROL,
-        HeaderValue::from_str(&format!(
-            "public, max-age={}, immutable",
-            config.fetch_interval / STATUS_MAX_AGE_DIVISOR
-        ))
-        .unwrap(),
-    );
-
-    (headers, [capacity.load(Relaxed)])
+    (
+        TypedHeader(ContentType::from(APPLICATION_OCTET_STREAM)),
+        TypedHeader(
+            CacheControl::new()
+                .with_max_age(Duration::from_secs(
+                    config.fetch_interval / STATUS_MAX_AGE_DIVISOR,
+                ))
+                .with_public(),
+        ),
+        [capacity.load(Relaxed)],
+    )
 }

@@ -33,10 +33,10 @@ pub use crate::config::Config;
 const STATUS_MAX_AGE_DIVISOR: u64 = 2;
 
 /// history.bin cached for 15 minutes
-const HISTORY_MAX_AGE: u64 = 15 * 60;
+const HISTORY_MAX_AGE: Duration = Duration::from_secs(15 * 60);
 
 /// Static files cached for 15 minutes
-const STATIC_FILES_MAX_AGE: u64 = 15 * 60;
+const STATIC_FILES_MAX_AGE: Duration = Duration::from_secs(15 * 60);
 
 #[derive(Clone)]
 pub struct AppState {
