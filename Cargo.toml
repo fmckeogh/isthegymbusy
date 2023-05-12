@@ -23,10 +23,10 @@ color-eyre = "0.6.2"
 tracing = { version = "0.1.37" }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 
-displaydoc = "0.2.3"
+displaydoc = "0.2.4"
 thiserror = "1.0.40"
 
-serde = { version = "1.0.160", features = ["derive"] }
+serde = { version = "1.0.162", features = ["derive"] }
 reqwest = { version = "0.11.17", default-features = false, features = ["rustls-tls"] }
 regex = "1.8.1"
 include_dir = "0.7.3"

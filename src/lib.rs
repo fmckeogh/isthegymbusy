@@ -29,20 +29,15 @@ pub mod status;
 
 pub use crate::config::Config;
 
-/// status.bin cached for half of the fetch interval
-const STATUS_MAX_AGE_DIVISOR: u64 = 2;
+/// history.bin cache duration
+const STATUS_MAX_AGE: Duration = Duration::from_secs(30);
 
-/// history.bin cached for 15 minutes
-const HISTORY_MAX_AGE: Duration = Duration::from_secs(15 * 60);
-
-/// Static files cached for 15 minutes
-const STATIC_FILES_MAX_AGE: Duration = Duration::from_secs(15 * 60);
+/// Static files cache duration
+const STATIC_FILES_MAX_AGE: Duration = Duration::from_secs(60);
 
 #[derive(Clone)]
 pub struct AppState {
-    capacity: Arc<AtomicU8>,
     db: Pool<Postgres>,
-    config: Config,
 }
 
 /// Starts a new instance of the contractor returning a handle
@@ -59,8 +54,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     debug!("running migrations");
     sqlx::migrate!().run(&db).await?;
 
-    let capacity =
-        StatusFetcher::init(db.clone(), Duration::from_secs(config.fetch_interval)).await;
+    StatusFetcher::init(db.clone(), Duration::from_secs(config.fetch_interval)).await;
 
     let compression = CompressionLayer::new().br(true).deflate(true).gzip(true);
 
@@ -69,13 +63,9 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .route("/health", get(health))
         .route("/", get(index))
         .route("/history.bin", get(history))
-        .route("/status.bin", get(status))
+        .route("/status", get(status))
         .fallback(static_files)
-        .with_state(AppState {
-            capacity,
-            db,
-            config: config.clone(),
-        })
+        .with_state(AppState { db })
         .layer(compression)
         .layer(create_trace_layer());
 

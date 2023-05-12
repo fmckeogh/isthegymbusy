@@ -1,5 +1,5 @@
 use {
-    crate::{AppState, HISTORY_MAX_AGE},
+    crate::{AppState, STATUS_MAX_AGE},
     axum::{
         extract::State,
         headers::{self, CacheControl, ContentType, Header},
@@ -73,7 +73,7 @@ pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
         TypedHeader(ContentType::from(APPLICATION_OCTET_STREAM)),
         TypedHeader(
             CacheControl::new()
-                .with_max_age(HISTORY_MAX_AGE)
+                .with_max_age(STATUS_MAX_AGE)
                 .with_public(),
         ),
         TypedHeader(HistoryLatest(latest_timestamp)),
