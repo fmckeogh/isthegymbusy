@@ -94,6 +94,7 @@ async fn fetcher_task_manager(fetcher: StatusFetcher, period: Duration) {
 
 async fn fetcher_task(mut fetcher: StatusFetcher, period: Duration) {
     let mut interval = interval(period);
+    interval.tick().await;
     loop {
         interval.tick().await;
         if let Err(e) = fetcher.update_status().await {
