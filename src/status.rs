@@ -42,7 +42,7 @@ impl StatusFetcher {
             regex: Regex::new(r"Occupancy: ([0-9]+)%").unwrap(),
         };
 
-        tokio::spawn(fetcher_task(celf, period));
+        tokio::spawn(fetcher_task_manager(celf, period));
 
         capacity
     }
@@ -82,6 +82,13 @@ impl StatusFetcher {
         .unwrap();
 
         Ok(())
+    }
+}
+
+async fn fetcher_task_manager(fetcher: StatusFetcher, period: Duration) {
+    loop {
+        let res = tokio::spawn(fetcher_task(fetcher.clone(), period)).await;
+        error!("fetcher_task joined with result {:?}", res);
     }
 }
 

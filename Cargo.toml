@@ -21,7 +21,7 @@ dotenv = "0.15.0"
 color-eyre = "0.6.2"
 tracing = { version = "0.1.37" }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-sentry = { version = "0.31.3", features = ["backtrace", "contexts", "panic", "rustls"], default-features = false }
+sentry = { version = "0.31.3", features = ["backtrace", "contexts", "panic", "reqwest", "rustls"], default-features = false }
 sentry-tracing = { version = "0.31.3", features = ["backtrace"], default-features = false }
 
 displaydoc = "0.2.4"
