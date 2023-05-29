@@ -18,6 +18,9 @@ pub struct Config {
 
     /// Postgres URL
     pub database_url: String,
+
+    /// Sentry ingest URL
+    pub sentry_url: String,
 }
 
 impl Config {

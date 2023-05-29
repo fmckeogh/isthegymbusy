@@ -50,6 +50,14 @@ pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
     tracing_init()?;
 
+    let guard = sentry::init((
+        config.sentry_url.as_str(),
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
+
     let db = PgPoolOptions::new()
         .acquire_timeout(Duration::from_secs(5))
         .connect(&config.database_url)
@@ -91,7 +99,11 @@ pub async fn start(config: &Config) -> Result<Handle> {
     info!("contractor started on http://{}", address);
 
     // return handles
-    Ok(Handle { address, handle })
+    Ok(Handle {
+        address,
+        handle,
+        _guard: guard,
+    })
 }
 
 /// Handle for running an instance
@@ -100,6 +112,8 @@ pub struct Handle {
     address: SocketAddr,
     // JoinHandle for server task
     handle: JoinHandle<Result<()>>,
+
+    _guard: sentry::ClientInitGuard,
 }
 
 impl Handle {

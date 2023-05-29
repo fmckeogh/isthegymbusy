@@ -17,6 +17,7 @@ pub fn tracing_init() -> Result<()> {
     Ok(tracing_subscriber::registry()
         .with(fmt::layer())
         .with(EnvFilter::from_default_env())
+        .with(sentry_tracing::layer())
         .try_init()?)
 }
 
