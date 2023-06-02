@@ -60,6 +60,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
 
     let db = PgPoolOptions::new()
         .acquire_timeout(Duration::from_secs(5))
+        .min_connections(5)
         .connect(&config.database_url)
         .await
         .unwrap();
