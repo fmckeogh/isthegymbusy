@@ -7,7 +7,7 @@ use {
     std::net::SocketAddr,
 };
 
-/// Contractor configuration parameters
+/// Configuration parameters
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
     /// Socket to bind HTTP server to
@@ -28,11 +28,11 @@ impl Config {
     pub fn new() -> Result<Self> {
         dotenv::dotenv().ok();
 
-        Ok(config::Config::builder()
+        config::Config::builder()
             .add_source(Environment::default())
             .build()
             .wrap_err("Failed build configuration")?
             .try_deserialize()
-            .wrap_err("Failed deserialize configuration")?)
+            .wrap_err("Failed deserialize configuration")
     }
 }

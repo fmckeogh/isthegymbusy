@@ -14,7 +14,7 @@ use {
     tracing::{error, info},
 };
 
-const URL: &'static str = "https://sport.wp.st-andrews.ac.uk/";
+const URL: &str = "https://sport.wp.st-andrews.ac.uk/";
 
 #[derive(Clone)]
 pub struct StatusFetcher {
@@ -78,8 +78,7 @@ impl StatusFetcher {
             i16::from(capacity),
         )
         .execute(&self.db)
-        .await
-        .unwrap();
+        .await?;
 
         Ok(())
     }
@@ -114,4 +113,6 @@ pub enum StatusUpdateError {
     MissingCaptureGroup { text: String, i: usize },
     /// Failed to parse {1:?} as u8: {0:?}
     Parse(ParseIntError, String),
+    /// Database error
+    Database(#[from] sqlx::Error),
 }

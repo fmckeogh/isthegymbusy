@@ -9,11 +9,11 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-axum = { version = "0.6.18", features = ["headers"] }
-tokio = { version = "1.29.0", features = ["full"] }
-tower-http = { version = "0.4.1", features = ["trace", "compression-br", "compression-gzip", "compression-deflate"] }
+axum = { version = "0.6.19", features = ["headers"] }
+tokio = { version = "1.29.1", features = ["full"] }
+tower-http = { version = "0.4.3", features = ["trace", "compression-br", "compression-gzip", "compression-deflate"] }
 
-sqlx = { version = "0.6.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "offline"] }
+sqlx = { version = "0.7.1", features = ["runtime-tokio-rustls", "postgres", "chrono"] }
 
 config = "0.13.3"
 dotenv = "0.15.0"
@@ -25,11 +25,11 @@ sentry = { version = "0.31.5", features = ["backtrace", "contexts", "panic", "re
 sentry-tracing = { version = "0.31.5", features = ["backtrace"], default-features = false }
 
 displaydoc = "0.2.4"
-thiserror = "1.0.40"
+thiserror = "1.0.44"
 
-serde = { version = "1.0.164", features = ["derive"] }
+serde = { version = "1.0.175", features = ["derive"] }
 reqwest = { version = "0.11.18", default-features = false, features = ["rustls-tls"] }
-regex = "1.8.4"
+regex = "1.9.1"
 include_dir = "0.7.3"
 mime_guess = "2.0.4"
 chrono = "0.4.26"

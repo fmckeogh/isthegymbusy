@@ -45,7 +45,7 @@ pub struct AppState {
     config: Config,
 }
 
-/// Starts a new instance of the contractor returning a handle
+/// Starts a new instance, returning a handle
 pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
     tracing_init()?;
@@ -97,7 +97,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     // spawn server on new tokio task
     let handle = tokio::spawn(async { server.await.map_err(Into::into) });
 
-    info!("contractor started on http://{}", address);
+    info!("isthegymbusy started on http://{}", address);
 
     // return handles
     Ok(Handle {
