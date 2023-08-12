@@ -38,6 +38,9 @@ const HISTORY_MAX_AGE: Duration = Duration::from_secs(15 * 60);
 /// Static files cached for 15 minutes
 const STATIC_FILES_MAX_AGE: Duration = Duration::from_secs(15 * 60);
 
+const DATABASE_ACQUIRE_TIMEOUT: Duration = Duration::from_secs(5);
+const DATABASE_MIN_CONNECTIONS: u32 = 5;
+
 #[derive(Clone)]
 pub struct AppState {
     capacity: Arc<AtomicU8>,
@@ -50,7 +53,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     // initialize global tracing subscriber
     tracing_init()?;
 
-    let guard = sentry::init((
+    let _guard = sentry::init((
         config.sentry_url.as_str(),
         sentry::ClientOptions {
             release: sentry::release_name!(),
@@ -59,8 +62,8 @@ pub async fn start(config: &Config) -> Result<Handle> {
     ));
 
     let db = PgPoolOptions::new()
-        .acquire_timeout(Duration::from_secs(5))
-        .min_connections(5)
+        .acquire_timeout(DATABASE_ACQUIRE_TIMEOUT)
+        .min_connections(DATABASE_MIN_CONNECTIONS)
         .connect(&config.database_url)
         .await
         .unwrap();
@@ -103,7 +106,7 @@ pub async fn start(config: &Config) -> Result<Handle> {
     Ok(Handle {
         address,
         handle,
-        _guard: guard,
+        _guard,
     })
 }
 
