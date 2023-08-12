@@ -1,6 +1,6 @@
 use {
-    regex::Regex,
-    reqwest::{Client, ClientBuilder},
+    regex::{Match, Regex},
+    reqwest::{Client, ClientBuilder, StatusCode},
     sqlx::{Pool, Postgres},
     std::{
         num::ParseIntError,
@@ -50,20 +50,25 @@ impl StatusFetcher {
     async fn update_status(&mut self) -> Result<(), StatusUpdateError> {
         info!("Starting status fetch");
 
-        let text = self.client.get(URL).send().await?.text().await?;
+        let response = self.client.get(URL).send().await?;
+
+        if !response.status().is_success() {
+            return Err(StatusUpdateError::Http(response.status()));
+        }
+
+        let text = response.text().await?;
 
         let captures = self
             .regex
             .captures(&text)
-            .ok_or_else(|| StatusUpdateError::MissingCaptures { text: text.clone() })?;
+            .ok_or_else(|| StatusUpdateError::MissingCaptures)?;
 
-        let percentage = captures
-            .get(1)
-            .ok_or_else(|| StatusUpdateError::MissingCaptureGroup {
+        let percentage = captures.get(1).as_ref().map(Match::as_str).ok_or_else(|| {
+            StatusUpdateError::MissingCaptureGroup {
                 text: text.clone(),
                 i: 1,
-            })?
-            .as_str();
+            }
+        })?;
 
         let capacity = percentage
             .parse()
@@ -107,8 +112,10 @@ async fn fetcher_task(mut fetcher: StatusFetcher, period: Duration) {
 pub enum StatusUpdateError {
     /// Error during GET request
     Request(#[from] reqwest::Error),
-    /// Regex did not match response text {text}
-    MissingCaptures { text: String },
+    /// Received HTTP error code {0}
+    Http(StatusCode),
+    /// Regex did not match response text
+    MissingCaptures,
     /// No capture group found at index {i} in text {text}
     MissingCaptureGroup { text: String, i: usize },
     /// Failed to parse {1:?} as u8: {0:?}
