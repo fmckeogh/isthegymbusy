@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                intervals.int_start as \"measured_at!\",\n                CASE\n                    WHEN COUNT(measurements.value) > 0 THEN AVG(measurements.value)::smallint\n                    ELSE 255::smallint\n                END as \"value!\"\n            FROM (\n                SELECT\n                    generate_series(\n                        date_trunc('day', NOW()) + interval '6 hours',\n                        date_trunc('day', NOW()) + interval '22 hours',\n                        $1::interval\n                    ) as int_start\n            ) as intervals\n            LEFT JOIN measurements ON (\n                measurements.measured_at >= intervals.int_start AND\n                measurements.measured_at < intervals.int_start + $1::interval\n            )\n            GROUP BY intervals.int_start\n            ORDER BY intervals.int_start DESC;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "measured_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Interval"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "a1ca2a0a7312faa1ee12c9945b8c6bc7135a56d2b99c9943ae1b8c40886b6660"
+}

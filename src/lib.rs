@@ -80,8 +80,10 @@ pub async fn start(config: &Config) -> Result<Handle> {
     let router = Router::new()
         .route("/health", get(health))
         .route("/", get(index))
-        .route("/history.bin", get(history))
-        .route("/status.bin", get(status))
+        .route("/history/today", get(history::today))
+        .route("/history/average", get(history::average))
+        .route("/history/year", get(history::year))
+        .route("/status", get(status))
         .fallback(static_files)
         .with_state(AppState {
             capacity,

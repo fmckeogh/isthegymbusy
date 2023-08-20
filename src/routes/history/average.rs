@@ -1,3 +1,5 @@
+//! Gets the historical average busyness for this day
+
 use {
     crate::{AppState, HISTORY_MAX_AGE},
     axum::{
@@ -9,15 +11,11 @@ use {
     },
     chrono::{DateTime, Utc},
     mime_guess::mime::APPLICATION_OCTET_STREAM,
-    sqlx::postgres::types::PgInterval,
     std::{iter::once, time::Duration},
 };
 
-/// Window in which to retrieve measurements from
-const QUERY_WINDOW: Duration = Duration::from_secs(60 * 60 * 24 * 2);
-
 /// Size of time intervals in which to group and average measurements in
-const INTERVAL: Duration = Duration::from_secs(5 * 60);
+const INTERVAL: Duration = Duration::from_secs(15 * 60);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Entry {
@@ -25,38 +23,39 @@ pub struct Entry {
     pub timestamp: i64,
 }
 
-pub async fn history(State(AppState { db, .. }): State<AppState>) -> impl IntoResponse {
+pub async fn average(State(AppState { db, .. }): State<AppState>) -> impl IntoResponse {
     struct DbEntry {
         measured_at: DateTime<Utc>,
         value: i16,
     }
 
+    // get entries today from 6:00 to 22:00
     let history = sqlx::query_as!(
         DbEntry,
         r#"
+        SELECT
+            date_trunc('day', NOW()) + interval '15 minutes' * intervals.int_start  as "measured_at!",
+            CASE
+                WHEN COUNT(measurements.value) > 0 THEN AVG(measurements.value)::smallint
+                ELSE 255::smallint
+            END as "value!"
+        FROM (
             SELECT
-                intervals.int_start as "measured_at!",
-                CASE
-                    WHEN COUNT(measurements.value) > 0 THEN AVG(measurements.value)::smallint
-                    ELSE 255::smallint
-                END as "value!"
-            FROM (
-                SELECT
-                    generate_series(
-                        date_trunc('minute', NOW() - $1::interval),
-                        NOW(),
-                        $2::interval
-                    ) as int_start
-            ) as intervals
-            LEFT JOIN measurements ON (
-                measurements.measured_at >= intervals.int_start AND
-                measurements.measured_at < intervals.int_start + $2::interval
-            )
-            GROUP BY intervals.int_start
-            ORDER BY intervals.int_start DESC;
+                generate_series(
+                    6 * 4,
+                    22 * 4
+                ) as int_start
+        ) as intervals
+        LEFT JOIN measurements ON (
+            measurements.measured_at > NOW() - interval '4 weeks' AND
+            measurements.measured_at >= date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) AND
+            measurements.measured_at < date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) + interval '15 minutes' AND
+            measurements.value > 0
+        )
+        GROUP BY intervals.int_start
+        ORDER BY intervals.int_start DESC
         "#,
-        PgInterval::try_from(QUERY_WINDOW).unwrap(),
-        PgInterval::try_from(INTERVAL).unwrap()
+        // PgInterval::try_from(INTERVAL).unwrap()
     )
     .fetch_all(&db)
     .await
