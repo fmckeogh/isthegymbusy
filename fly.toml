@@ -9,40 +9,40 @@ kill_signal = "SIGINT"
 kill_timeout = "5s"
 
 [experimental]
-  auto_rollback = true
+auto_rollback = true
 
 [env]
-  ADDRESS = "0.0.0.0:8080"
-  FETCH_INTERVAL = "60"
-  RUST_LOG = "info,tower_http::trace::on_request=warn"
+ADDRESS = "0.0.0.0:8080"
+FETCH_INTERVAL = "60"
+RUST_LOG = "info,tower_http::trace::on_request=warn"
 
 [[services]]
-  protocol = "tcp"
-  internal_port = 8080
-  processes = ["app"]
+protocol = "tcp"
+internal_port = 8080
+processes = ["app"]
 
-  [[services.ports]]
-    port = 80
-    handlers = ["http"]
-    force_https = true
+[[services.ports]]
+port = 80
+handlers = ["http"]
+force_https = true
 
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 20000
-    soft_limit = 15000
+[[services.ports]]
+port = 443
+handlers = ["tls", "http"]
+[services.concurrency]
+type = "connections"
+hard_limit = 20000
+soft_limit = 15000
 
-  [[services.tcp_checks]]
-    interval = 10000
-    grace_period = "5s"
-    restart_limit = 5
+[[services.tcp_checks]]
+interval = 10000
+grace_period = "5s"
+restart_limit = 5
 
-  [[services.http_checks]]
-    interval = 10000
-    grace_period = "5s"
-    restart_limit = 5
-    method = "get"
-    path = "/health"
-    protocol = "http"
+[[services.http_checks]]
+interval = 10000
+grace_period = "5s"
+restart_limit = 5
+method = "get"
+path = "/health"
+protocol = "http"
