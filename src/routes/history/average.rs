@@ -29,7 +29,7 @@ pub async fn average(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
         value: i16,
     }
 
-    // get entries today from 6:00 to 22:00
+    // get average for entries in the past few days
     let history = sqlx::query_as!(
         DbEntry,
         r#"
@@ -47,8 +47,7 @@ pub async fn average(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
                 ) as int_start
         ) as intervals
         LEFT JOIN measurements ON (
-            measurements.measured_at < NOW() - interval '24 weeks' AND
-            measurements.measured_at > NOW() - interval '26 weeks' AND
+            measurements.measured_at > NOW() - interval '3 days' AND
             measurements.measured_at >= date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) AND
             measurements.measured_at < date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) + interval '15 minutes' AND
             measurements.value > 0
