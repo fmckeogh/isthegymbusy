@@ -47,7 +47,7 @@ pub async fn average(State(AppState { db, .. }): State<AppState>) -> impl IntoRe
                 ) as int_start
         ) as intervals
         LEFT JOIN measurements ON (
-            measurements.measured_at > NOW() - interval '3 days' AND
+            measurements.measured_at > NOW() - interval '7 days' AND
             measurements.measured_at >= date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) AND
             measurements.measured_at < date_trunc('day', measurements.measured_at) + (interval '15 minutes' * intervals.int_start) + interval '15 minutes' AND
             measurements.value > 0
