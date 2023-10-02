@@ -84,7 +84,7 @@ function create_chart(id, data) {
             },
           },
           min: 0,
-          max: 100,
+          max: 120,
         },
         x: {
           type: "time",
