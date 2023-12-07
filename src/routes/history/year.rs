@@ -3,9 +3,11 @@ use {
     crate::{AppState, HISTORY_MAX_AGE},
     axum::{
         extract::State,
-        headers::{self, CacheControl, ContentType, Header},
         http::{HeaderName, HeaderValue},
         response::IntoResponse,
+    },
+    axum_extra::{
+        headers::{self, CacheControl, ContentType, Header},
         TypedHeader,
     },
     chrono::{DateTime, Utc},

@@ -15,7 +15,7 @@ use {
         sync::{atomic::AtomicU8, Arc},
         time::Duration,
     },
-    tokio::task::JoinHandle,
+    tokio::{net::TcpListener, task::JoinHandle},
     tower_http::compression::CompressionLayer,
     tracing::{debug, info},
 };
@@ -94,13 +94,17 @@ pub async fn start(config: &Config) -> Result<Handle> {
         .layer(create_trace_layer());
 
     // bind axum server to socket address and use router to create a service factory
-    let server = axum::Server::bind(&config.address).serve(router.into_make_service());
+    let listener = TcpListener::bind(&config.address).await?;
 
     // get address server is bound to (may be different to address passed to Server::bind)
-    let address = server.local_addr();
+    let address = listener.local_addr()?;
 
     // spawn server on new tokio task
-    let handle = tokio::spawn(async { server.await.map_err(Into::into) });
+    let handle = tokio::spawn(async {
+        axum::serve(listener, router.into_make_service())
+            .await
+            .map_err(Into::into)
+    });
 
     info!("isthegymbusy started on http://{}", address);
 

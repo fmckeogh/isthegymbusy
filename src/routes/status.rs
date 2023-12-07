@@ -1,9 +1,8 @@
 use {
     crate::{AppState, STATUS_MAX_AGE_DIVISOR},
-    axum::{
-        extract::State,
+    axum::{extract::State, response::IntoResponse},
+    axum_extra::{
         headers::{CacheControl, ContentType},
-        response::IntoResponse,
         TypedHeader,
     },
     mime_guess::mime::APPLICATION_OCTET_STREAM,

@@ -1,9 +1,11 @@
 use {
     crate::STATIC_FILES_MAX_AGE,
     axum::{
-        headers::{CacheControl, ContentType},
         http::{StatusCode, Uri},
         response::{IntoResponse, Response},
+    },
+    axum_extra::{
+        headers::{CacheControl, ContentType},
         TypedHeader,
     },
     include_dir::{include_dir, Dir},
