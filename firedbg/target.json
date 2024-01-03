@@ -1,0 +1,11 @@
+{
+  "binaries": [
+    {
+      "name": "isthegymbusy",
+      "src_path": "/Users/ferdiamckeogh/Downloads/isthegymbusy/src/main.rs"
+    }
+  ],
+  "examples": [],
+  "integration_tests": [],
+  "unit_tests": []
+}
