@@ -29,7 +29,7 @@ impl StatusFetcher {
         let client = ClientBuilder::new()
             .timeout(Duration::from_secs(5))
             .connect_timeout(Duration::from_secs(5))
-            .user_agent("Mozilla/5.0 (Android 4.4; Tablet; rv:41.0) Gecko/41.0 Firefox/41.0")
+            .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15")
             .build()
             .unwrap();
 
