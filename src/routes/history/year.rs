@@ -17,7 +17,7 @@ use {
 };
 
 /// Window in which to retrieve measurements from
-const QUERY_WINDOW: Duration = Duration::from_secs(60 * 60 * 24 * 2);
+const QUERY_WINDOW: Duration = Duration::from_secs(60 * 60 * 24 * 365);
 
 /// Size of time intervals in which to group and average measurements in
 const INTERVAL: Duration = Duration::from_secs(60 * 60 * 24);
