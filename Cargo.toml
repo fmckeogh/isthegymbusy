@@ -8,47 +8,47 @@ default-run = "isthegymbusy"
 lto = "thin"
 
 [dependencies]
-axum =  "0.7.7"
-axum-extra = { version = "0.9.4", features = ["typed-header"] }
-tokio = { version = "1.41.0", features = ["full"] }
-tower-http = { version = "0.6.1", features = [
+axum =  "0.8.1"
+axum-extra = { version = "0.10.0", features = ["typed-header"] }
+tokio = { version = "1.43.0", features = ["full"] }
+tower-http = { version = "0.6.2", features = [
     "trace",
     "compression-br",
     "compression-gzip",
     "compression-deflate",
 ] }
 
-sqlx = { version = "0.8.2", features = [
+sqlx = { version = "0.8.3", features = [
     "runtime-tokio-rustls",
     "postgres",
     "chrono",
 ] }
 
-config = "0.14.1"
+config = "0.15.6"
 dotenv = "0.15.0"
 
 color-eyre = "0.6.3"
-tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-sentry = { version = "0.34.0", features = [
+tracing = { version = "0.1.41" }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+sentry = { version = "0.36.0", features = [
     "backtrace",
     "contexts",
     "panic",
     "reqwest",
     "rustls",
 ], default-features = false }
-sentry-tracing = { version = "0.34.0", features = [
+sentry-tracing = { version = "0.36.0", features = [
     "backtrace",
 ], default-features = false }
 
 displaydoc = "0.2.5"
-thiserror = "1.0.65"
+thiserror = "2.0.11"
 
-serde = { version = "1.0.214", features = ["derive"] }
-reqwest = { version = "0.12.9", default-features = false, features = [
+serde = { version = "1.0.217", features = ["derive"] }
+reqwest = { version = "0.12.12", default-features = false, features = [
     "rustls-tls",
 ] }
 regex = "1.11.1"
 include_dir = "0.7.4"
 mime_guess = "2.0.5"
-chrono = "0.4.38"
+chrono = "0.4.39"
