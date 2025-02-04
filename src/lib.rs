@@ -17,7 +17,7 @@ use {
     },
     tokio::{net::TcpListener, task::JoinHandle},
     tower_http::compression::CompressionLayer,
-    tracing::{debug, info},
+    tracing::{debug, info, warn},
 };
 
 pub mod config;
@@ -60,6 +60,8 @@ pub async fn start(config: &Config) -> Result<Handle> {
             ..Default::default()
         },
     ));
+
+    warn!("{:?}", &config.database_url);
 
     let db = PgPoolOptions::new()
         .acquire_timeout(DATABASE_ACQUIRE_TIMEOUT)
