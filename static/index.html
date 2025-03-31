@@ -9,15 +9,23 @@
         <script src=https://cdnjs.cloudflare.com/ajax/libs/luxon/3.5.0/luxon.min.js></script>
         <script src=https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-luxon/1.3.1/chartjs-adapter-luxon.umd.min.js></script>
 
-        <!-- <script src=/main.js type=module></script> -->
+        <script src=/main.js type=module></script>
     </header>
     <body>
         <div class=p-5>
             <h2 style="font-size: 400%;" class=text-center>Is the gym busy?</h2>
-            <h1 id="answer" class="display-1 text-center" style="font-size: 1500%;">???</h1>
-            <h4 style="font-size: 350%;" class=text-center>The university website stopped reporting how busy it is, breaking this site:(<span id="occupancy"></span></h4>
-            <h4 style="font-size: 350%;" class=text-center>If they bring it back, I'll fix this site, but for now I'm afraid it's goodbye.</h4>
-            <h4 style="font-size: 350%;" class=text-center>It's been an honor getting swole with y'all 🫡</h4>
+            <h1 id="answer" class="display-1 text-center" style="font-size: 1500%;"></h1>
+            <h3 style="font-size: 500%;" class=text-center>Current occupancy: <span id="occupancy">0</span>%</h3>
+            <div class=py-5 style="height: 500px">
+                <h4 style="font-size: 300%;" class=text-center>Today</h4>
+                <canvas id=chart-today>
+                </canvas>
+            </div>
+            <div class=py-5 style="height: 500px">
+                <h4 style="font-size: 300%;" class=text-center>Last Week Average</h4>
+                <canvas id=chart-average>
+                </canvas>
+            </div>
         </div>
         <footer class="bg-light text-center text-lg-start">
             <div class="text-center p-3">
