@@ -8,9 +8,9 @@ default-run = "isthegymbusy"
 lto = "thin"
 
 [dependencies]
-axum =  "0.8.1"
-axum-extra = { version = "0.10.0", features = ["typed-header"] }
-tokio = { version = "1.43.0", features = ["full"] }
+axum =  "0.8.3"
+axum-extra = { version = "0.10.1", features = ["typed-header"] }
+tokio = { version = "1.44.1", features = ["full"] }
 tower-http = { version = "0.6.2", features = [
     "trace",
     "compression-br",
@@ -24,7 +24,7 @@ sqlx = { version = "0.8.3", features = [
     "chrono",
 ] }
 
-config = "0.15.6"
+config = "0.15.11"
 dotenv = "0.15.0"
 
 color-eyre = "0.6.3"
@@ -42,13 +42,13 @@ sentry-tracing = { version = "0.36.0", features = [
 ], default-features = false }
 
 displaydoc = "0.2.5"
-thiserror = "2.0.11"
+thiserror = "2.0.12"
 
-serde = { version = "1.0.217", features = ["derive"] }
-reqwest = { version = "0.12.12", default-features = false, features = [
+serde = { version = "1.0.219", features = ["derive"] }
+reqwest = { version = "0.12.15", default-features = false, features = [
     "rustls-tls",
 ] }
 regex = "1.11.1"
 include_dir = "0.7.4"
 mime_guess = "2.0.5"
-chrono = "0.4.39"
+chrono = "0.4.40"
