@@ -12,7 +12,7 @@ function update_status(occupancy) {
 
   var answer = document.getElementById("answer");
 
-  if (occupancy >= 75) {
+  if (occupancy >= 50) {
     answer.innerText = "Yes";
     answer.classList.remove("text-success");
     answer.classList.add("text-danger");
