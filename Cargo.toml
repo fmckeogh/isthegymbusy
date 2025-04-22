@@ -10,7 +10,7 @@ lto = "thin"
 [dependencies]
 axum =  "0.8.3"
 axum-extra = { version = "0.10.1", features = ["typed-header"] }
-tokio = { version = "1.44.1", features = ["full"] }
+tokio = { version = "1.44.2", features = ["full"] }
 tower-http = { version = "0.6.2", features = [
     "trace",
     "compression-br",
@@ -18,7 +18,7 @@ tower-http = { version = "0.6.2", features = [
     "compression-deflate",
 ] }
 
-sqlx = { version = "0.8.3", features = [
+sqlx = { version = "0.8.5", features = [
     "runtime-tokio-rustls",
     "postgres",
     "chrono",
@@ -30,14 +30,14 @@ dotenv = "0.15.0"
 color-eyre = "0.6.3"
 tracing = { version = "0.1.41" }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-sentry = { version = "0.36.0", features = [
+sentry = { version = "0.37.0", features = [
     "backtrace",
     "contexts",
     "panic",
     "reqwest",
     "rustls",
 ], default-features = false }
-sentry-tracing = { version = "0.36.0", features = [
+sentry-tracing = { version = "0.37.0", features = [
     "backtrace",
 ], default-features = false }
 
